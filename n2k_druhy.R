@@ -123,9 +123,15 @@ n2k_druhy_pre <- n2k_export %>%
                                      REL_POC == "do 10" ~ 1,
                                      REL_POC == "1-10" ~ 1,
                                      grepl("počet samců: do 10", POZN_TAX) ~ 1),
+    # cilova jednotka, k nacteni z ciselniku, k doplneni Martinem
     POP_CILJEDNOTKA = NA,
     POP_KOEFICIENT = dplyr::case_when(POP_CILJEDNOTKA == POCITANO ~ 1,
-                                      POP_CILJEDNOTKA == "cm2" & POCITANO == "dm2" ~ 0.01),
+                                      POP_CILJEDNOTKA == "cm2" & POCITANO == "dm2" ~ 100,
+                                      POP_CILJEDNOTKA == "cm2" & POCITANO == "m2" ~ 10000,
+                                      POP_CILJEDNOTKA == "dm2" & POCITANO == "cm2" ~ 0.01,
+                                      POP_CILJEDNOTKA == "dm2" & POCITANO == "m2" ~ 100,
+                                      POP_CILJEDNOTKA == "m2" & POCITANO == "cm2" ~ 0.0001,
+                                      POP_CILJEDNOTKA == "m2" & POCITANO == "dm2" ~ 0.01),
     vliv = stringr::str_extract(STRUKT_POZN, "(?<=<vliv>).*(?=</vliv>)")) %>%
   dplyr::mutate(
     VLV_VLIVY = dplyr::case_when(is.na(vliv) == FALSE ~ vliv,
