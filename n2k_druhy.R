@@ -77,9 +77,8 @@ n2k_druhy_pre <- n2k_export %>%
                                               DRUH %in% c("Carabus menetriesi pacholei", 
                                                           "Bolbelasmus unicornis") ~ 1,
                                               TRUE ~ 0)) %>%
-  #filter(SKUPINA == "Cévnaté rostliny") %>%
+  filter(SKUPINA == "Cévnaté rostliny") %>%
   #filter(SKUPINA %in% c("Motýli", "Brouci", "Vážky")) %>%
-  filter(SKUPINA %in% c("Cévnaté rostliny")) %>%
   #filter(SKUPINA %in% c("Letouni", "Savci")) %>%
   # NALEZ_SPOLECNE ---- 
   dplyr::mutate(
