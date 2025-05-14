@@ -1,6 +1,3 @@
-# SEW WD ----
-base::setwd("~/host_naturecz")
-
 # LOAD PACKAGES ----
 if(!isTRUE(require(tidyverse, quietly = TRUE))) {
   install.packages("tidyverse", dependencies = TRUE); library(tidyverse)
