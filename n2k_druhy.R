@@ -407,28 +407,6 @@ n2k_druhy <- n2k_druhy_pre %>%
 
 rm(n2k_druhy_lokpop, n2k_druhy_lokpop_trend, n2k_druhy_del)
 
-# HODNOCENE_OBDOBI ----
-# hodnocene obdobi - ChU - druh - lokalita - pole
-n2k_druhy_obdobi_lok <- n2k_druhy %>%
-  dplyr::group_by(kod_chu, DRUH, KOD_LOKAL, POLE) %>%
-  dplyr::reframe(
-    HODNOCENE_OBDOBI_OD = min(DATUM, na.rm = TRUE),
-    HODNOCENE_OBDOBI_DO = max(DATUM, na.rm = TRUE)
-  )
-# hodnocene obdobi - ChU - druh - pole
-n2k_druhy_obdobi_pol <- n2k_druhy %>%
-  dplyr::group_by(kod_chu, DRUH, POLE) %>%
-  dplyr::reframe(
-    HODNOCENE_OBDOBI_OD = min(DATUM, na.rm = TRUE),
-    HODNOCENE_OBDOBI_DO = max(DATUM, na.rm = TRUE)
-  )
-# hodnocene obdobi - ChU - druh
-n2k_druhy_obdobi_chu <- n2k_druhy %>%
-  dplyr::group_by(kod_chu, DRUH) %>%
-  dplyr::reframe(
-    HODNOCENE_OBDOBI_OD = min(DATUM, na.rm = TRUE),
-    HODNOCENE_OBDOBI_DO = max(DATUM, na.rm = TRUE)
-  )
 
 # POSLEDNI_NALEZ ----
 # posledni nalez - ChÚ - druh - lokalita - pole
@@ -452,10 +430,6 @@ n2k_druhy_posledni_chu <- n2k_druhy %>%
 
 # NDOP LIMITY ----
 n2k_druhy_long <- n2k_druhy %>%
-  #dplyr::filter(SKUPINA %in% c(#"Motýli", "Brouci", 
-                               #"Cévnaté rostliny", "Mechorosty"
-                               #"Obojživelníci"
-                               #)) %>%
   dplyr::mutate(across(.cols = ncol_orig:ncol(.), .fns = ~ as.character(.))) %>%
   tidyr::pivot_longer(.,
                       cols = c((ncol_orig+9):ncol(.)),
@@ -472,7 +446,6 @@ n2k_druhy_long <- n2k_druhy %>%
                                            TRUE ~ TYP_IND)) 
 
 n2k_druhy_lim_pre <- n2k_druhy_long %>%
-  #dplyr::filter(SKUPINA %in% c("Motýli", "Brouci", "Cévnaté rostliny", "Mechorosty")) %>%
   dplyr::mutate(STAV_IND = dplyr::case_when(TYP_IND == "min" & as.numeric(HOD_IND) < as.numeric(LIM_IND) ~ 0,
                                             TYP_IND == "min" & as.numeric(HOD_IND) >= as.numeric(LIM_IND) ~ 1,
                                             TYP_IND == "max" & as.numeric(HOD_IND) > as.numeric(LIM_IND) ~ 0,
@@ -507,8 +480,6 @@ ncol_druhy_lim <- ncol(n2k_druhy_lim)
 
 # LOKALITA LIMITY ----
 n2k_druhy_lok_pre <- n2k_druhy_lim %>%
-  #filter(DRUH %in% c("Myotis myotis", "Rhinolophus hipposideros")) %>%
-  #dplyr::filter(SKUPINA %in% c("Cévnaté rostliny", "Obojživelníci")) %>%
   dplyr::group_by(kod_chu, DRUH, KOD_LOKAL, POLE, ROK, ID_IND) %>%
   dplyr::reframe(
     SKUPINA = unique(SKUPINA),
@@ -533,8 +504,6 @@ n2k_druhy_lok_pre <- n2k_druhy_lim %>%
   dplyr::distinct()
 
 n2k_druhy_lok <- n2k_druhy_lok_pre %>%
-  #dplyr::filter(SKUPINA %in% c("Cévnaté rostliny")) %>%
-  #dplyr::filter(SKUPINA %in% c("Obojživelníci")) %>%
   dplyr::group_by(kod_chu, DRUH, KOD_LOKAL, ROK) %>%
   dplyr::mutate(IND_SUM = as.character(sum(as.numeric(STAV_IND), na.rm = TRUE)),
                 IND_SUMKLIC = as.character(sum(as.numeric(STAV_IND[KLIC == "ano" &
@@ -571,7 +540,6 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
                                            ID_IND == "CELKOVE_HODNOCENI" & STAV_IND == 1 ~ "dobrý",
                                            TRUE ~ HOD_IND)) %>%
   dplyr::ungroup() %>%
-  #dplyr::select(-c(IND_SUM:IND_SUMOST)) %>%
   dplyr::distinct() %>%
   dplyr::arrange(ID_ND_AKCE)
 
@@ -587,12 +555,10 @@ n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   dplyr::pull(ID_ND_AKCE)
 
 n2k_druhy_pole1eval <- n2k_druhy_lok %>%
-  #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
   dplyr::filter(ID_ND_AKCE %in% n2k_druhy_pole1_idakce) %>%
   dplyr::ungroup()
 
 n2k_druhy_lok_idakce <- n2k_druhy_lok %>%
-  #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
   dplyr::group_by(kod_chu, DRUH, KOD_LOKAL) %>%
   dplyr::arrange(desc(CILMON),
                  desc(ROK), 
