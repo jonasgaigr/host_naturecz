@@ -408,26 +408,6 @@ n2k_druhy <- n2k_druhy_pre %>%
 rm(n2k_druhy_lokpop, n2k_druhy_lokpop_trend, n2k_druhy_del)
 
 
-# POSLEDNI_NALEZ ----
-# posledni nalez - ChÚ - druh - lokalita - pole
-n2k_druhy_posledni_lok <- n2k_druhy %>%
-  dplyr::group_by(kod_chu, DRUH, KOD_LOKAL, POLE) %>%
-  dplyr::reframe(
-    POSLEDNI_NALEZ = max(DATUM, na.rm = TRUE)
-  )
-# posledni nalez - ChÚ - druh - pole
-n2k_druhy_posledni_pol <- n2k_druhy %>%
-  dplyr::group_by(kod_chu, DRUH, POLE) %>%
-  dplyr::reframe(
-    POSLEDNI_NALEZ = max(DATUM, na.rm = TRUE)
-  )
-# posledni nalez - ChÚ - druh
-n2k_druhy_posledni_chu <- n2k_druhy %>%
-  dplyr::group_by(kod_chu, DRUH) %>%
-  dplyr::reframe(
-    POSLEDNI_NALEZ = max(DATUM, na.rm = TRUE)
-  )
-
 # NDOP LIMITY ----
 n2k_druhy_long <- n2k_druhy %>%
   dplyr::mutate(across(.cols = ncol_orig:ncol(.), .fns = ~ as.character(.))) %>%
