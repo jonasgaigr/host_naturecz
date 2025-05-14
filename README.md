@@ -1,1 +1,1 @@
-Hodnocení stavu předmětů ochrany soustavy Natura 2000 v Česku
+Hodnocení stavu předmětů ochrany soustavy Natura 2000 v Česku. Sumarizace dat z Nálezové databáze ochrany přírody AOPK ČR a Vrstvy mapování biotopů. Zpřístupnění výsledků hodnocení stavu orgánům ochrany přírody a a dalším uživatelům.
