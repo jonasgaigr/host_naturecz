@@ -1,5 +1,4 @@
-
-# LOKALITA LIMITY ----
+# LOKALITA LIMITY - PRIPRAVA ----
 n2k_druhy_lok_pre <- n2k_druhy_lim %>%
   dplyr::group_by(kod_chu, DRUH, KOD_LOKAL, POLE, ROK, ID_IND) %>%
   dplyr::reframe(
@@ -24,6 +23,7 @@ n2k_druhy_lok_pre <- n2k_druhy_lim %>%
   dplyr::ungroup() %>%
   dplyr::distinct()
 
+# LOKALITA LIMITY ----
 n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   dplyr::group_by(kod_chu, DRUH, KOD_LOKAL, ROK) %>%
   dplyr::mutate(IND_SUM = as.character(sum(as.numeric(STAV_IND), na.rm = TRUE)),
@@ -64,6 +64,7 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   dplyr::distinct() %>%
   dplyr::arrange(ID_ND_AKCE)
 
+# VYBER ID AKCE REPREZENTUJICI SITMAP_1RAD ----
 n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
   dplyr::group_by(kod_chu, DRUH, POLE) %>%
@@ -75,10 +76,12 @@ n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   dplyr::ungroup() %>%
   dplyr::pull(ID_ND_AKCE)
 
+# FILTR NALEZU PODLE VYBRANEHO ID AKCE (POLE) ----
 n2k_druhy_pole1eval <- n2k_druhy_lok %>%
   dplyr::filter(ID_ND_AKCE %in% n2k_druhy_pole1_idakce) %>%
   dplyr::ungroup()
 
+# VYBER ID AKCE REPREZENTUJICI LOKALITU ----
 n2k_druhy_lok_idakce <- n2k_druhy_lok %>%
   dplyr::group_by(kod_chu, DRUH, KOD_LOKAL) %>%
   dplyr::arrange(desc(CILMON),
@@ -89,6 +92,7 @@ n2k_druhy_lok_idakce <- n2k_druhy_lok %>%
   dplyr::ungroup() %>%
   dplyr::pull(ID_ND_AKCE)
 
+# FILTR NALEZU PODLE VYBRANEHO ID AKCE (LOKALITA) ----
 n2k_druhy_lokeval <- n2k_druhy_lok %>%
   #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
   dplyr::filter(ID_ND_AKCE %in% n2k_druhy_pole1_idakce) %>%
