@@ -154,9 +154,9 @@ n2k_union <- sf::st_join(
   po
   )
 
-rp_code <- read.csv2(
-  "n2k_rp_25.csv", 
-  fileEncoding = "Windows-1250"
+rp_code <- readr::read_csv2(
+  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/n2k_rp_25.csv", 
+  locale = readr::locale(encoding = "Windows-1250")
   ) %>%
   dplyr::rename(
     kod_chu = sitecode
