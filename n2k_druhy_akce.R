@@ -339,6 +339,10 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
     POP_POCETMIN = min(POP_POCET, na.rm = TRUE), 
     POP_POCETMAX = max(POP_POCET, na.rm = TRUE), 
     POP_POCETMAX = ifelse(is.infinite(POP_POCETMAX), 0, POP_POCETMAX),
+    POP_POCETNOST = max(
+      POP_POCETNOST,
+      na.rm = TRUE
+    ),
     POP_POCETNOSTMAX = NA,
     #POP_POCETSUM = sum(POP_POCET, na.rm = TRUE),
     #CILMON = max(CILMON, na.rm = TRUE),
@@ -390,6 +394,7 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
 # populacni trendy odvozene od posledniho pozorovani POP_POCETMAX[1]
 n2k_druhy_lokpop_trend <- n2k_druhy_lokpop %>%
   dplyr::group_by(KOD_LOKAL, DRUH) %>%
+  # serazeni sestupne podle roku
   dplyr::arrange(desc(ROK)) %>%
   #dplyr::filter(CILMON == 1 & is.na(POP_POCETMAX) == FALSE & is.infinite(POP_POCETMAX) == FALSE) %>%
   dplyr::reframe(POP_POCETMAXREF = POP_POCETMAX[3],
@@ -419,7 +424,7 @@ n2k_druhy_lokpop_trend <- n2k_druhy_lokpop %>%
   dplyr::ungroup()
   
 
-# join do konecne tabulky vsech indikatoru
+# KOMPILACE DO KONECNE TABULKY VSECH INDIKATORU ----
 n2k_druhy <- n2k_druhy_pre %>%
   dplyr::left_join(., n2k_druhy_lokpop, 
                    by = join_by(ROK, KOD_LOKAL, DRUH)) %>%
@@ -427,55 +432,97 @@ n2k_druhy <- n2k_druhy_pre %>%
                    by = join_by(KOD_LOKAL, DRUH)) %>%
   dplyr::distinct() 
 
-rm(n2k_druhy_lokpop, n2k_druhy_lokpop_trend, n2k_druhy_del)
+# ODSTRANENI PRIPRAVNYCH OBJEKTU Z PAMETI
+rm(n2k_druhy_pre, n2k_druhy_lokpop, n2k_druhy_lokpop_trend)
 
 
-# NDOP LIMITY ----
+# PREVEDENI NA LONG FORMAT A  NAPOJENI NA LIMITY ----
 n2k_druhy_long <- n2k_druhy %>%
   dplyr::mutate(across(.cols = ncol_orig:ncol(.), .fns = ~ as.character(.))) %>%
   tidyr::pivot_longer(.,
                       cols = c((ncol_orig+9):ncol(.)),
                       names_to = "ID_IND",
                       values_to = "HOD_IND") %>%
-  dplyr::select(-c(ZDROJ:PRESNOST)) %>%
-  dplyr::right_join(.,
-                    limity %>%
-                      dplyr::filter(UROVEN == "lok") %>%
-                      dplyr::filter(is.na(LIM_IND) == FALSE), 
-                    by = c("DRUH" = "DRUH",
-                           "ID_IND" = "ID_IND")) %>%
-  dplyr::mutate(IND_GRP = dplyr::case_when(TYP_IND %in% c("min", "max") ~ "minmax",
-                                           TRUE ~ TYP_IND)) 
+  dplyr::select(
+    -c(ZDROJ:PRESNOST)
+    ) %>%
+  dplyr::right_join(
+    .,
+    limity %>%
+      dplyr::filter(
+        UROVEN == "lok"
+        ) %>%
+      dplyr::filter(
+        is.na(LIM_IND) == FALSE
+        ),
+    by = c("DRUH" = "DRUH",
+           "ID_IND" = "ID_IND")
+    ) %>%
+  dplyr::mutate(
+    IND_GRP = dplyr::case_when(
+      TYP_IND %in% c("min", "max") ~ "minmax",
+      TRUE ~ TYP_IND
+      )
+    ) 
 
+# POROVNANI  NA LONG FORMAT A  NAPOJENI NA LIMITY ----
 n2k_druhy_lim_pre <- n2k_druhy_long %>%
-  dplyr::mutate(STAV_IND = dplyr::case_when(TYP_IND == "min" & as.numeric(HOD_IND) < as.numeric(LIM_IND) ~ 0,
-                                            TYP_IND == "min" & as.numeric(HOD_IND) >= as.numeric(LIM_IND) ~ 1,
-                                            TYP_IND == "max" & as.numeric(HOD_IND) > as.numeric(LIM_IND) ~ 0,
-                                            TYP_IND == "max" & as.numeric(HOD_IND) <= as.numeric(LIM_IND) ~ 1,
-                                            TYP_IND == "val" & HOD_IND != LIM_IND ~ 0,
-                                            TYP_IND == "val" & HOD_IND == LIM_IND ~ 1)) %>%
-  dplyr::group_by(ID_ND_NALEZ, ID_IND, IND_GRP) %>%
-  dplyr::mutate(STAV_IND = dplyr::case_when(IND_GRP == "minmax" & grepl("POP_", ID_IND) == TRUE ~ max(as.numeric(STAV_IND), na.rm = TRUE),
-                                            IND_GRP == "minmax" & grepl("POP_", ID_IND) == FALSE ~ min(as.numeric(STAV_IND), na.rm = TRUE),
-                                            IND_GRP == "val" ~ max(as.numeric(STAV_IND), na.rm = TRUE))) %>%
+  dplyr::mutate(
+    STAV_IND = dplyr::case_when(
+      TYP_IND == "min" & as.numeric(HOD_IND) < as.numeric(LIM_IND) ~ 0,
+      TYP_IND == "min" & as.numeric(HOD_IND) >= as.numeric(LIM_IND) ~ 1,
+      TYP_IND == "max" & as.numeric(HOD_IND) > as.numeric(LIM_IND) ~ 0,
+      TYP_IND == "max" & as.numeric(HOD_IND) <= as.numeric(LIM_IND) ~ 1,
+      TYP_IND == "val" & HOD_IND != LIM_IND ~ 0,
+      TYP_IND == "val" & HOD_IND == LIM_IND ~ 1
+      )
+    ) %>%
+  dplyr::group_by(
+    ID_ND_NALEZ, 
+    ID_IND, 
+    IND_GRP
+    ) %>%
+  dplyr::mutate(
+    STAV_IND = dplyr::case_when(
+      IND_GRP == "minmax" & grepl("POP_", ID_IND) == TRUE ~ max(as.numeric(STAV_IND), na.rm = TRUE),
+      IND_GRP == "minmax" & grepl("POP_", ID_IND) == FALSE ~ min(as.numeric(STAV_IND), na.rm = TRUE),
+      IND_GRP == "val" ~ max(as.numeric(STAV_IND), 
+                             na.rm = TRUE)
+      )
+    ) %>%
   dplyr::ungroup() %>%
-  dplyr::mutate(STAV_IND = dplyr::case_when(is.infinite(STAV_IND) ~ NA,
-                                            TRUE ~ STAV_IND)) %>%
+  dplyr::mutate(
+    STAV_IND = dplyr::case_when(
+      is.infinite(STAV_IND) ~ NA,
+      TRUE ~ STAV_IND
+      )
+    ) %>%
   dplyr::group_by(ID_ND_NALEZ, ID_IND) %>%
   dplyr::arrange(-STAV_IND) %>%
   dplyr::slice(1) %>%
   dplyr::ungroup()
 
+# NAPOJENI NA LIMITY ----
 n2k_druhy_lim <- n2k_druhy_lim_pre %>%
   dplyr::group_by(ID_ND_NALEZ) %>%
-  dplyr::mutate(CELKOVE_HODNOCENI = as.character(sum(STAV_IND, na.rm = TRUE))) %>%
+  dplyr::mutate(
+    CELKOVE_HODNOCENI = as.character(sum(
+      STAV_IND, 
+      na.rm = TRUE)
+      )
+    ) %>%
   dplyr::select(-c(ID_IND:IND_GRP)) %>%
-  tidyr::pivot_longer(.,
-                      cols = ncol(.),
-                      names_to = "ID_IND",
-                      values_to = "HOD_IND") %>%
+  tidyr::pivot_longer(
+    .,
+    cols = ncol(.),
+    names_to = "ID_IND",
+    values_to = "HOD_IND"
+    ) %>%
   dplyr::distinct() %>%
-  dplyr::bind_rows(., n2k_druhy_lim_pre) %>%
+  dplyr::bind_rows(
+    ., 
+    n2k_druhy_lim_pre
+    ) %>%
   dplyr::arrange(ID_ND_NALEZ)
 
 ncol_druhy_lim <- ncol(n2k_druhy_lim)
