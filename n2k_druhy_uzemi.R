@@ -1,5 +1,3 @@
-
-# UZEMI ----
 # CHU_POLE ----
 n2k_druhy_chu_pole1 <- n2k_druhy_pole1eval %>%
   dplyr::group_by(kod_chu, DRUH) %>%
@@ -373,7 +371,7 @@ n2k_druhy_chu <- n2k_druhy_pole1eval %>%
                    ID_ND_AKCE)) %>%
   dplyr::distinct()
 
-
+# ZAPIS DAT ----
 sep <- ","
 quote_env <- TRUE
 encoding <- "Windows-1250"
