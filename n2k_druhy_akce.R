@@ -77,8 +77,12 @@ n2k_druhy_pre <- n2k_export %>%
                                               DRUH %in% c("Carabus menetriesi pacholei", 
                                                           "Bolbelasmus unicornis") ~ 1,
                                               TRUE ~ 0)) %>%
-  filter(SKUPINA == "Cévnaté rostliny") %>%
-  #filter(SKUPINA %in% c("Motýli", "Brouci", "Vážky")) %>%
+  dplyr::filter(
+    DRUH %in% sites_subjects$nazev_lat & kod_chu %in% sites_subjects$site_code
+  ) %>%
+  #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
+  dplyr::filter(SKUPINA %in% c("Motýli", "Brouci", "Vážky")) %>%
+  #dplyr::filter(SKUPINA == "Obojživelníci") %>%
   #filter(SKUPINA %in% c("Letouni", "Savci")) %>%
   # NALEZ_SPOLECNE ---- 
   dplyr::mutate(
