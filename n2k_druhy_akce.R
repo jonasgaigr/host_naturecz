@@ -294,22 +294,31 @@ n2k_druhy_pre <- n2k_export %>%
     POCET_POSKOZENYCH = readr::parse_number(POSKOZENI_ROSTLIN),
     POCET_POSKOZENYCHSUM = sum(POCET_POSKOZENYCH, na.rm = TRUE),
     PROCENTO_POSKOZENYCH = POCET_POSKOZENYCHSUM/unique(POP_POCETLODYHSUM),
-    POSKOZENI_KAT = dplyr::case_when(grepl("Nezjištěno", POSKOZENI_ROSTLIN) ~ 0,
-                                     grepl("1-10 %", POSKOZENI_ROSTLIN) ~ 1,
-                                     grepl("10 %", POSKOZENI_ROSTLIN) ~ 1,
-                                     grepl("11-50 %", POSKOZENI_ROSTLIN) ~ 2,
-                                     grepl("10-50 %", POSKOZENI_ROSTLIN) ~ 2,
-                                     grepl("51-100 %", POSKOZENI_ROSTLIN) ~ 3,
-                                     grepl("50-100 %", POSKOZENI_ROSTLIN) ~ 3,
-                                     grepl("100 %", POSKOZENI_ROSTLIN) ~ 3,
-                                     TRUE ~ NA_integer_),
-    POSKOZENI_LODYHKAT = dplyr::case_when(PROCENTO_POSKOZENYCH == 0 ~ 0,
-                                          PROCENTO_POSKOZENYCH > 0 & PROCENTO_POSKOZENYCH <= 0.1 ~ 1,
-                                          PROCENTO_POSKOZENYCH > 0.1 & PROCENTO_POSKOZENYCH <= 0.5 ~ 2,
-                                          PROCENTO_POSKOZENYCH > 0.5 ~ 3,
-                                          TRUE ~ NA_integer_),
-    POP_POSKPERC = dplyr::case_when(DRUH == "Adenophora liliifolia" ~ unique(POSKOZENI_LODYHKAT),
-                                    TRUE ~ sum(POSKOZENI_KAT, na.rm = TRUE))
+    POSKOZENI_KAT = dplyr::case_when(
+      grepl("Nezjištěno", POSKOZENI_ROSTLIN) ~ 0,
+      grepl("1-10 %", POSKOZENI_ROSTLIN) ~ 1,
+      grepl("10 %", POSKOZENI_ROSTLIN) ~ 1,
+      grepl("11-50 %", POSKOZENI_ROSTLIN) ~ 2,
+      grepl("10-50 %", POSKOZENI_ROSTLIN) ~ 2,
+      grepl("51-100 %", POSKOZENI_ROSTLIN) ~ 3,
+      grepl("50-100 %", POSKOZENI_ROSTLIN) ~ 3,
+      grepl("100 %", POSKOZENI_ROSTLIN) ~ 3,
+      TRUE ~ NA_integer_
+      ),
+    POSKOZENI_LODYHKAT = dplyr::case_when(
+      PROCENTO_POSKOZENYCH == 0 ~ 0,
+      PROCENTO_POSKOZENYCH > 0 & PROCENTO_POSKOZENYCH <= 0.1 ~ 1,
+      PROCENTO_POSKOZENYCH > 0.1 & PROCENTO_POSKOZENYCH <= 0.5 ~ 2,
+      PROCENTO_POSKOZENYCH > 0.5 ~ 3,
+      TRUE ~ NA_integer_
+      ),
+    POP_POSKPERC = dplyr::case_when(
+      DRUH == "Adenophora liliifolia" ~ unique(POSKOZENI_LODYHKAT),
+      TRUE ~ sum(
+        POSKOZENI_KAT, 
+        na.rm = TRUE
+        )
+      )
     ) %>%
   dplyr::ungroup() %>%
   tidyr::separate_rows(STA_PRUHLEDNOSTVODA, sep = ",") %>%
