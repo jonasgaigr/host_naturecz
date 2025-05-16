@@ -12,7 +12,10 @@ n2k_druhy_lok_pre <- n2k_druhy_lim %>%
     SKUPINA = unique(SKUPINA),
     NAZEV_LOK = toString(unique(LOKALITA)),
     ID_ND_AKCE = toString(unique(IDX_ND_AKCE)),
-    DATUM = max(DATUM, na.rm = TRUE),
+    DATUM = max(
+      DATUM, 
+      na.rm = TRUE
+      ),
     HOD_IND = toString(na.omit(unique(HOD_IND))),        
     TYP_IND = unique(TYP_IND),
     LIM_IND = unique(LIM_IND),
