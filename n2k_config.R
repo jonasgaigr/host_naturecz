@@ -46,22 +46,55 @@ CIS_CILMON <- read.csv("cil_mon_zdroj.csv", fileEncoding = "Windows-1250")
 current_year <- 2024
 
 # LIMITY ----
-limity_cev <- read.csv("limity_cevky.csv", fileEncoding = "Windows-1250")
+limity_cev <- read.csv(
+  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/limity_cevky.csv", 
+  fileEncoding = "Windows-1250")
 limity <- read.csv(
-  "limity_vse.csv", fileEncoding = "Windows-1250") %>%
-  dplyr::bind_rows(., limity_cev) %>%
-  dplyr::group_by(DRUH, ID_IND, TYP_IND, UROVEN) %>%
+  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/limity_vse.csv", 
+  fileEncoding = "Windows-1250"
+  ) %>%
+  dplyr::bind_rows(
+    ., 
+    limity_cev
+    ) %>%
+  dplyr::group_by(
+    DRUH, 
+    ID_IND, 
+    TYP_IND, 
+    UROVEN
+    ) %>%
   dplyr::rowwise() %>%
-  dplyr::mutate(LIM_INDLIST = dplyr::case_when(
-    TYP_IND == "max" ~ paste("nejvýš", LIM_IND, JEDNOTKA),
-    TYP_IND == "min" ~ paste("alespoň", LIM_IND, JEDNOTKA),
-    TYP_IND == "val" ~ paste(paste0(unique(LIM_IND), collapse = ", ")),
-    TRUE ~ NA_character_)
+  dplyr::mutate(
+    LIM_INDLIST = dplyr::case_when(
+      TYP_IND == "max" ~ paste(
+        "nejvýš", 
+        LIM_IND, 
+        JEDNOTKA
+        ),
+      TYP_IND == "min" ~ paste(
+        "alespoň", 
+        LIM_IND, 
+        JEDNOTKA
+        ),
+      TYP_IND == "val" ~ paste(
+        paste0(
+          unique(LIM_IND), 
+          collapse = ", "
+          )
+        ),
+      TRUE ~ NA_character_)
   ) %>%
   dplyr::ungroup() %>%
-  dplyr::group_by(DRUH, ID_IND) %>%
+  dplyr::group_by(
+    DRUH, 
+    ID_IND
+    ) %>%
   dplyr::mutate(
-    LIM_INDLIST = toString(na.omit(unique(LIM_INDLIST)))
+    LIM_INDLIST = toString(
+      na.omit(
+        unique(LIM_INDLIST)
+        )
+      )
     ) %>%
   dplyr::ungroup()
 
