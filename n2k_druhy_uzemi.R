@@ -9,7 +9,9 @@ n2k_druhy_chu_pole1 <- n2k_druhy_pole1eval %>%
     POLE = toString(unique(POLE)),
     NAZEV_LOK = toString(unique(NAZEV_LOK)),
     ID_ND_AKCE = toString(unique(ID_ND_AKCE)),
-    CILMON = max(CILMON, na.rm = TRUE),
+    CILMON = max(
+      CILMON, na.rm = TRUE
+      ),
     POP_POCETPOLE1 = sum(
       ID_IND == "CELKOVE_HODNOCENI" &
         CILMON == 1, 
@@ -30,6 +32,7 @@ n2k_druhy_chu_pole1 <- n2k_druhy_pole1eval %>%
   dplyr::mutate(
     POP_PROCPOLE1D = round(POP_POCETPOLE1D/POP_POCETPOLE1*100, 3),
     # CHU_POLE_HMYZ ----
+    # pokryvnost preferovanych biotopu evd
     STA_HABPOKRYVPRE = {
       x <- biotop_evd$BIOTOP_PROCENTO[biotop_evd$SITECODE == kod_chu & 
                                         biotop_evd$DRUH == DRUH]
@@ -38,7 +41,6 @@ n2k_druhy_chu_pole1 <- n2k_druhy_pole1eval %>%
     STA_HABPOKRYV = dplyr::case_when(is.na(STA_HABPOKRYVPRE) == TRUE ~ NA,
                                      TRUE ~ STA_HABPOKRYVPRE)) %>%
   dplyr::select(-STA_HABPOKRYVPRE) %>%
-  #dplyr::select(-c(ID_IND:IND_GRP))  %>%
   dplyr::mutate(across(.cols = 7:ncol(.)-2, .fns = ~ as.character(.))) %>%
   tidyr::pivot_longer(.,
                       cols = c(8:ncol(.)),
@@ -57,56 +59,134 @@ n2k_druhy_chu_lok <- n2k_druhy_lokeval %>%
     POLE = toString(unique(POLE)),
     NAZEV_LOK = toString(unique(NAZEV_LOK)),
     ID_ND_AKCE = toString(unique(ID_ND_AKCE)),
-    CILMON = max(CILMON, na.rm = TRUE),
+    CILMON = max(
+      CILMON, 
+      na.rm = TRUE
+      ),
     POP_PRESENCE = dplyr::case_when(ID_IND == "POP_PRESENCE" & grepl("ano", HOD_IND) == TRUE ~ "ano", 
                                     ID_IND == "POP_PRESENCE" & grepl("ne", HOD_IND) == TRUE ~ "ne", 
                                     TRUE ~ NA_character_), 
-    POP_POCETMAX = sum(dplyr::case_when(ID_IND == "POP_POCETMAX" ~ as.numeric(HOD_IND), 
-                                        TRUE ~ NA), 
-                       na.rm = TRUE), 
-    POP_POCETMAX = sum(dplyr::case_when(ID_IND == "POP_POCETMIN" ~ as.numeric(HOD_IND), 
-                                        TRUE ~ NA), 
-                       na.rm = TRUE), 
-    POP_POCETSUM = sum(dplyr::case_when(ID_IND == "POP_POCET" & CILMON == 1 ~ as.numeric(HOD_IND), 
-                                        TRUE ~ NA), 
-                       na.rm = TRUE) %>%
+    POP_POCETMAX = sum(
+      dplyr::case_when(
+        ID_IND == "POP_POCETMAX" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE
+      ), 
+    POP_POCETMAX = sum(
+      dplyr::case_when(
+        ID_IND == "POP_POCETMIN" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE
+      ), 
+    POP_POCETSUM = sum(
+      dplyr::case_when(
+        ID_IND == "POP_POCET" & CILMON == 1 ~ as.numeric(HOD_IND),
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE) %>%
       max(),
-    POP_POCETDOB = sum(dplyr::case_when(ID_IND == "POP_POCET" & CELKOVE == 1 & CILMON == 1 ~ as.numeric(HOD_IND), 
-                                        TRUE ~ 0), 
-                       na.rm = TRUE) %>%
+    POP_POCETDOB = sum(
+      dplyr::case_when(
+        ID_IND == "POP_POCET" & CELKOVE == 1 & CILMON == 1 ~ as.numeric(HOD_IND), 
+        TRUE ~ 0
+        ), 
+      na.rm = TRUE) %>%
       max(),
-    POP_POCETOST = sum(dplyr::case_when(ID_IND == "POP_POCET" & CELKOVE != 1 & CILMON == 1 ~ as.numeric(HOD_IND), 
-                                        TRUE ~ 0), 
-                       na.rm = TRUE),
+    POP_POCETOST = sum(
+      dplyr::case_when(
+        ID_IND == "POP_POCET" & CELKOVE != 1 & CILMON == 1 ~ as.numeric(HOD_IND), 
+        TRUE ~ 0
+        ), 
+      na.rm = TRUE),
     POP_PROCDOB = POP_POCETDOB/POP_POCETSUM*100,
     # CHU_LOK_HMYZ ----
     # CHU_OSTATNIBEZ ----
     # CHU_OBOJZIVELNICI ----
     # CHU_RYBY ----
     # CHU_SAVCI ----
-    POP_POCETZIM = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                 TRUE ~ NA), na.rm = TRUE), 
-    POP_POCETZIM1 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                  TRUE ~ NA), na.rm = TRUE),
-    POP_POCETZIM2 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                  TRUE ~ NA), na.rm = TRUE),
-    POP_POCETZIM3 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                  TRUE ~ NA), na.rm = TRUE),
-    POP_POCETZIMREF = mean(POP_POCETZIM1, POP_POCETZIM2, POP_POCETZIM3, na.rm = TRUE),
-    POP_VITALZIM = ifelse(POP_POCETZIMREF == 0, NA_real_, POP_POCETZIM / POP_POCETZIMREF),
-    POP_POCETLETS1 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                   TRUE ~ NA), na.rm = TRUE),
-    POP_POCETLETS2 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                   TRUE ~ NA), na.rm = TRUE),
-    POP_POCETLET = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                 TRUE ~ NA), na.rm = TRUE), 
-    POP_POCETLET1 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                  TRUE ~ NA), na.rm = TRUE), 
-    POP_POCETLET2 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                  TRUE ~ NA), na.rm = TRUE), 
-    POP_POCETLET3 = sum(case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
-                                  TRUE ~ NA), na.rm = TRUE), 
-    POP_POCETLETREF = mean(POP_POCETLET1, POP_POCETLET2, POP_POCETLET3, na.rm = TRUE),
+    POP_POCETZIM = sum(
+      case_when(
+        ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE), 
+    POP_POCETZIM1 = sum(
+      case_when(
+        ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE),
+    POP_POCETZIM2 = sum(
+      case_when(
+        ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE
+      ),
+    POP_POCETZIM3 = sum(
+      case_when(
+        ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ),
+      na.rm = TRUE
+      ),
+    POP_POCETZIMREF = mean(
+      POP_POCETZIM1, 
+      POP_POCETZIM2, 
+      POP_POCETZIM3, 
+      na.rm = TRUE
+      ),
+    POP_VITALZIM = ifelse(
+      POP_POCETZIMREF == 0, 
+      NA_real_, 
+      POP_POCETZIM / POP_POCETZIMREF
+      ),
+    POP_POCETLETS1 = sum(
+      case_when(
+        ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE
+      ),
+    POP_POCETLETS2 = sum(
+      case_when(
+        ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE
+      ),
+    POP_POCETLET = sum(
+      case_when(
+        ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+        TRUE ~ NA
+        ), 
+      na.rm = TRUE
+      ), 
+    POP_POCETLET1 = sum(
+      case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+                TRUE ~ NA
+                ), 
+      na.rm = TRUE
+      ), 
+    POP_POCETLET2 = sum(
+      case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+                TRUE ~ NA
+                ), 
+      na.rm = TRUE
+      ), 
+    POP_POCETLET3 = sum(
+      case_when(ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
+                TRUE ~ NA
+                ), 
+      na.rm = TRUE
+      ), 
+    POP_POCETLETREF = mean(
+      POP_POCETLET1, 
+      POP_POCETLET2, 
+      POP_POCETLET3, 
+      na.rm = TRUE),
     POP_VITALLET = POP_POCETLET/POP_POCETLETREF,
     POP_REPROCHI = POP_POCETLETS2/POP_POCETLETS1,
     # CHU_MECHOROSTY ----
@@ -116,14 +196,24 @@ n2k_druhy_chu_lok <- n2k_druhy_lokeval %>%
     # CHU_PTACI ----
     
   )  %>%
-  dplyr::mutate(across(.cols = 7:ncol(.), .fns = ~ as.character(.))) %>%
-  tidyr::pivot_longer(.,
-                      cols = c(8:ncol(.)),
-                      names_to = "ID_IND",
-                      values_to = "HOD_IND") %>%
-  dplyr::mutate(HOD_IND = as.character(HOD_IND)) %>%
+  dplyr::mutate(
+    across(.cols = 7:ncol(.), 
+           .fns = ~ as.character(.)
+           )
+    ) %>%
+  tidyr::pivot_longer(
+    .,
+    cols = c(8:ncol(.)),
+    names_to = "ID_IND",
+    values_to = "HOD_IND"
+    ) %>%
+  dplyr::mutate(
+    HOD_IND = as.character(HOD_IND)
+    ) %>%
   dplyr::distinct() %>%
-  dplyr::bind_rows(., n2k_druhy_chu_pole1) %>%
+  dplyr::bind_rows(
+    .,
+    n2k_druhy_chu_pole1) %>%
   dplyr::arrange(ID_ND_AKCE) %>%
   dplyr::right_join(.,
                     limity %>%
@@ -161,7 +251,10 @@ n2k_druhy_chu <- n2k_druhy_pole1eval %>%
     KLIC = unique(KLIC),
     UROVEN = unique(UROVEN),
     IND_GRP = unique(IND_GRP),
-    CILMON = max(CILMON, na.rm = TRUE)
+    CILMON = max(
+      CILMON, 
+      na.rm = TRUE
+      )
   )  %>%
   dplyr::distinct() %>%
   dplyr::ungroup() %>%
