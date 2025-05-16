@@ -177,7 +177,11 @@ biotop_evd <- readr::read_csv(
   )
 
 # NDOP EXPORT ----
+# export obsahuje data o vyskytu citlivych druhu: 
+# kompletni pouze pro overene uzivatele,
+# bez vyskytu citlivych druhu na vyzadani na jonas.gaigr@aopk.gov.cz
 n2k_export <- readr::read_csv2(
+  # NUTNE DOPLNIT LOKALNI CESTU
   "C:/Users/jonas.gaigr/Documents/host_data/evl_data_export_20250408.csv", 
   locale = readr::locale(encoding = "Windows-1250")
   )
@@ -186,3 +190,4 @@ n2k_export <- readr::read_csv2(
 
 ncol_orig <- ncol(n2k_export)
 
+# KONEC SKRIPTU ----
