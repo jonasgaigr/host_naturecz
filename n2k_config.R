@@ -1,4 +1,6 @@
-# LOAD PACKAGES ----
+#----------------------------------------------------------#
+# Nacteni knihoven -----
+#----------------------------------------------------------#
 if(!isTRUE(require(tidyverse, quietly = TRUE))) {
   install.packages("tidyverse", dependencies = TRUE); library(tidyverse)
 } else {
@@ -39,13 +41,23 @@ if(!isTRUE(require(rn2kcz, quietly = TRUE))) {
 } else {
   require(rn2kcz)}
 
+#----------------------------------------------------------#
+# Nacteni dat -----
+#----------------------------------------------------------#
 
-# ZDROJ CÍLENÉHO MONITORINGU ----
+#--------------------------------------------------#
+## Zdroj cileného monitoringu ---- 
+#--------------------------------------------------#
 CIS_CILMON <- read.csv("cil_mon_zdroj.csv", fileEncoding = "Windows-1250")
-# AKTUÁLNÍ ROK ----
-current_year <- 2024
 
-# LIMITY ----
+#--------------------------------------------------#
+## Rok hodnoceni ---- 
+#--------------------------------------------------#
+current_year <- as.numeric(format(Sys.Date(), "%Y")) - 1
+
+#--------------------------------------------------#
+## Limity hodnoceni stavu ---- 
+#--------------------------------------------------#
 limity_cev <- read.csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/limity_cevky.csv", 
   fileEncoding = "Windows-1250")
@@ -98,10 +110,16 @@ limity <- read.csv(
     ) %>%
   dplyr::ungroup()
 
+#--------------------------------------------------#
+## Ciselnik indikatoru hodnoceni stavu ---- 
+#--------------------------------------------------#
 indikatory_id <- read.csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/cis_indikatory_popis.csv", 
   fileEncoding = "Windows-1250")
 
+#--------------------------------------------------#
+## Ciselnik periody hodnoceni stavu ---- 
+#--------------------------------------------------#
 cis_evd_perioda <- read.csv("https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/cis_evd_perioda.csv", 
                             fileEncoding = "Windows-1250"
                             ) %>%
@@ -110,9 +128,14 @@ cis_evd_perioda <- read.csv("https://raw.githubusercontent.com/jonasgaigr/host_n
     PERIODA
     )
 
-# LOKALITY ----
+#--------------------------------------------------#
+## Seznam predmetu ochrany EVL ---- 
+#--------------------------------------------------#
 rn2kcz::load_n2k_sites() 
 
+#--------------------------------------------------#
+## Ciselnik OOP ---- 
+#--------------------------------------------------#
 n2k_oop <- readr::read_csv2(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/n2k_oop_25.csv", 
   locale = readr::locale(encoding = "Windows-1250")
@@ -121,6 +144,29 @@ n2k_oop <- readr::read_csv2(
   dplyr::rename(SITECODE = sitecode) %>%
   dplyr::select(SITECODE, oop)
 
+#--------------------------------------------------#
+## Ciselnik RP AOPK CR ---- 
+#--------------------------------------------------#
+rp_code <- readr::read_csv2(
+  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/n2k_rp_25.csv", 
+  locale = readr::locale(encoding = "Windows-1250")
+) %>%
+  dplyr::rename(
+    kod_chu = sitecode
+  ) %>%
+  dplyr::select(
+    kod_chu, 
+    pracoviste) %>%
+  dplyr::mutate(
+    pracoviste = gsub(",", 
+                      "", 
+                      pracoviste
+    )
+  )
+
+#--------------------------------------------------#
+## Stazeni GIS vrstev AOPK CR ---- 
+#--------------------------------------------------#
 endpoint <- "http://gis.nature.cz/arcgis/services/Aplikace/Opendata/MapServer/WFSServer?"
 caps_url <- base::paste0(endpoint, "request=GetCapabilities&service=WFS")
 
@@ -154,40 +200,27 @@ n2k_union <- sf::st_join(
   po
   )
 
-rp_code <- readr::read_csv2(
-  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/n2k_rp_25.csv", 
-  locale = readr::locale(encoding = "Windows-1250")
-  ) %>%
-  dplyr::rename(
-    kod_chu = sitecode
-    ) %>%
-  dplyr::select(
-    kod_chu, 
-    pracoviste) %>%
-  dplyr::mutate(
-    pracoviste = gsub(",", 
-                      "", 
-                      pracoviste
-                      )
-    )
-
-# BIOTOP EVD HMYZ ----
+#--------------------------------------------------#
+## Ciselnik biotopu EVD hmyzu ---- 
+#--------------------------------------------------#
 biotop_evd <- readr::read_csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/biotopy_evd_hmyz.csv"
   )
 
-# NDOP EXPORT ----
+#------------------------------------------------------#
+# Zdrojova data - export z NDOP ----
 # export obsahuje data o vyskytu citlivych druhu: 
 # kompletni pouze pro overene uzivatele,
 # bez vyskytu citlivych druhu na vyzadani na jonas.gaigr@aopk.gov.cz
+#------------------------------------------------------#
 n2k_export <- readr::read_csv2(
   # NUTNE DOPLNIT LOKALNI CESTU
   "C:/Users/jonas.gaigr/Documents/host_data/evl_data_export_20250408.csv", 
   locale = readr::locale(encoding = "Windows-1250")
   )
-#volna_export <- readr::read_csv("volna_data_export_20250317.csv", locale = readr::locale(encoding = "Windows-1250"))
-#n2k_export <- bind_rows(n2k_export, volna_export)
 
 ncol_orig <- ncol(n2k_export)
 
-# KONEC SKRIPTU ----
+#------------------------------------------------------#
+# END ----
+#------------------------------------------------------#
