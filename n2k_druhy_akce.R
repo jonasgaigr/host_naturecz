@@ -106,6 +106,12 @@ n2k_druhy_pre <- n2k_export %>%
                                  POP_PRESENCE == "ano" & POCITANO %in% !limity$JEDNOTKA[limity$ID_IND == "POP_REPRO" & limity$druh == DRUH] ~ "ano",
                                  TRUE ~ NA_character_),
     POP_POCETNOST = dplyr::case_when(POP_PRESENCE == 0 ~ 0,
+                                     POP_POCET > 1000000 ~ 8,
+                                     REL_POC == "100 001-1 000 000" ~ 8,
+                                     POP_POCET > 100000 ~ 7,
+                                     REL_POC == "10 001-100 000" ~ 7,
+                                     POP_POCET > 10000 ~ 6,
+                                     REL_POC == "1001-10 000" ~ 6,
                                      POP_POCET > 1000 ~ 5,
                                      REL_POC == "řádově tisíce" ~ 5,
                                      REL_POC == "1001-10 000" ~ 5,
@@ -121,7 +127,7 @@ n2k_druhy_pre <- n2k_export %>%
                                      POP_POCET > 51 & POP_POCET <= 100 ~ 3,
                                      REL_POC == "řádově nižší desítky" ~ 2,
                                      grepl("počet samců: řádově nižší desítky", POZN_TAX) ~ 2,
-                                     REL_POC == "11-100" ~ 2,
+                                     REL_POC == "11-100" ~ 3,
                                      POP_POCET > 10 & POP_POCET < 50 ~ 2,
                                      POP_POCET > 0 & POP_POCET <= 10 ~ 1,
                                      REL_POC == "do 10" ~ 1,
@@ -176,38 +182,120 @@ n2k_druhy_pre <- n2k_export %>%
                                       CILMON == 1 ~ "nezaznamenána"),
       # NALEZ_OSTATNIBEZ ----
       # NALEZ_OBOJZIVELNICI ----
-      STA_STAVVODARYBNIK = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_STAVVODARYBNIK>).*(?=</STA_STAVVODARYBNIK>)")),
-      STA_STAVVODALITORAL = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_STAVVODALITORAL>).*(?=</STA_STAVVODALITORAL>)")),
-      STA_STAVVODATUNE = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_STAVVODATUNE>).*(?=</STA_STAVVODATUNE>)")),
-      STA_STAVVODA = dplyr::case_when(is.na(STA_STAVVODATUNE) == FALSE ~ STA_STAVVODATUNE,
-                                      is.na(STA_STAVVODALITORAL) == FALSE ~ STA_STAVVODALITORAL,
-                                      is.na(STA_STAVVODARYBNIK) == FALSE ~ STA_STAVVODARYBNIK),
-      STA_ZTRATABIO = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_ZOOPLANKTON>).*(?=</STA_ZOOPLANKTON>)")),
-      STA_KACHNAPRITOMNOST = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_KACHNAPRITOMNOST>).*(?=</STA_KACHNAPRITOMNOST>)")),
-      STA_RYBY = dplyr::case_when(grepl("akvakultur", STRUKT_POZN, ignore.case = TRUE) |
-                                    grepl("rybolov", STRUKT_POZN, ignore.case = TRUE) ~ "ano",
-                                  TRUE ~ "ne"),
-      STA_ZOOPLANKTON = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_ZOOPLANKTON>).*(?=</STA_ZOOPLANKTON>)")),
-      STA_MANIPULACE = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_MANIPULACE>).*(?=</STA_MANIPULACE>)")),
-      STA_POKRVEGETACE = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_POKRVEGETACE>).*(?=</STA_POKRVEGETACE>)")),
-      STA_PRUHLEDNOSTVODA = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_PRUHLEDNOSTVODA>).*(?=</STA_PRUHLEDNOSTVODA>)")),
-      STA_PRUHLEDNOSTVODAT = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_PRUHLEDNOSTVODAT>).*(?=</STA_PRUHLEDNOSTVODAT>)")),
-      STA_PRUHLEDNOSTVODA = dplyr::case_when(is.na(STA_PRUHLEDNOSTVODAT) == FALSE ~ STA_PRUHLEDNOSTVODAT,
-                                             TRUE ~ STA_PRUHLEDNOSTVODA),
-      STA_UHYNOBOJZIVELNIK = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_UHYNOBOJZIVELNIK>).*(?=</STA_UHYNOBOJZIVELNIK>)")),
-      STA_ZASTINENIHLADINA = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_ZASTINENIHLADINA>).*(?=</STA_ZASTINENIHLADINA>)")),
-      STA_ZASTINENILITORAL = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_ZASTINENILITORAL>).*(?=</STA_ZASTINENILITORAL>)")),
-      STA_ZASTINENIHLADINA = dplyr::case_when(STA_ZASTINENIHLADINA <= STA_ZASTINENILITORAL ~ STA_ZASTINENILITORAL,
-                                             TRUE ~ STA_ZASTINENIHLADINA),
+      STA_STAVVODARYBNIK = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_STAVVODARYBNIK>).*(?=</STA_STAVVODARYBNIK>)"
+          )
+        ),
+      STA_STAVVODALITORAL = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_STAVVODALITORAL>).*(?=</STA_STAVVODALITORAL>)"
+          )
+        ),
+      STA_STAVVODATUNE = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_STAVVODATUNE>).*(?=</STA_STAVVODATUNE>)"
+          )
+        ),
+      STA_STAVVODA = dplyr::case_when(
+        is.na(STA_STAVVODATUNE) == FALSE ~ STA_STAVVODATUNE,
+        is.na(STA_STAVVODALITORAL) == FALSE ~ STA_STAVVODALITORAL,
+        is.na(STA_STAVVODARYBNIK) == FALSE ~ STA_STAVVODARYBNIK),
+      STA_ZTRATABIO = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_ZOOPLANKTON>).*(?=</STA_ZOOPLANKTON>)"
+          )
+        ),
+      STA_KACHNAPRITOMNOST = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_KACHNAPRITOMNOST>).*(?=</STA_KACHNAPRITOMNOST>)"
+          )
+        ),
+      STA_RYBY = dplyr::case_when(
+        grepl(
+          "akvakultur", 
+          STRUKT_POZN, 
+          ignore.case = TRUE) | 
+          grepl("rybolov", 
+                STRUKT_POZN, 
+                ignore.case = TRUE
+                ) 
+        ~ "ano",
+        TRUE ~ "ne"),
+      STA_ZOOPLANKTON = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_ZOOPLANKTON>).*(?=</STA_ZOOPLANKTON>)"
+          )
+        ),
+      STA_MANIPULACE = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_MANIPULACE>).*(?=</STA_MANIPULACE>)"
+          )
+        ),
+      STA_POKRVEGETACE = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_POKRVEGETACE>).*(?=</STA_POKRVEGETACE>)"
+          )
+        ),
+      STA_PRUHLEDNOSTVODA = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_PRUHLEDNOSTVODA>).*(?=</STA_PRUHLEDNOSTVODA>)"
+          )
+        ),
+      STA_PRUHLEDNOSTVODAT = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_PRUHLEDNOSTVODAT>).*(?=</STA_PRUHLEDNOSTVODAT>)"
+          )
+        ),
+      STA_PRUHLEDNOSTVODA = dplyr::case_when(
+        is.na(STA_PRUHLEDNOSTVODAT) == FALSE ~ STA_PRUHLEDNOSTVODAT,
+        TRUE ~ STA_PRUHLEDNOSTVODA),
+      STA_UHYNOBOJZIVELNIK = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_UHYNOBOJZIVELNIK>).*(?=</STA_UHYNOBOJZIVELNIK>)"
+          )
+        ),
+      STA_ZASTINENIHLADINA = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_ZASTINENIHLADINA>).*(?=</STA_ZASTINENIHLADINA>)"
+          )
+        ),
+      STA_ZASTINENILITORAL = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_ZASTINENILITORAL>).*(?=</STA_ZASTINENILITORAL>)"
+          )
+        ),
+      STA_ZASTINENIHLADINA = dplyr::case_when(
+        STA_ZASTINENIHLADINA <= STA_ZASTINENILITORAL ~ STA_ZASTINENILITORAL,
+        TRUE ~ STA_ZASTINENIHLADINA),
       # NALEZ_RYBY ----
       
       # NALEZ_SAVCI ----
-      POP_PRESENCE_ZIMNI = max(POP_PRESENCE[(ROK == ROK & MESIC < 5) | (ROK == ROK - 1 & MESIC > 9)], 
-                           na.rm = TRUE),
-      POP_PRESENCE_LETNI = max(POP_PRESENCE[(ROK == ROK &
-                                       MESIC >= 5 & 
-                                       MESIC <= 9)], 
-                           na.rm = TRUE),
+      POP_PRESENCE_ZIMNI = max(
+        POP_PRESENCE[(ROK == ROK & 
+                        MESIC < 5) | 
+                       (ROK == ROK - 1 & 
+                          MESIC > 9)],
+        na.rm = TRUE
+        ),
+      POP_PRESENCE_LETNI = max(
+        POP_PRESENCE[(ROK == ROK &
+                        MESIC >= 5 &
+                        MESIC <= 9)],
+        na.rm = TRUE),
       # NALEZ MECHOROSTY ----
       POP_POCETMIKROLOK = readr::parse_number(stringr::str_extract(STRUKT_POZN, "(?<=<pocet_ml>).*(?=</pocet_ml>)")),
       POP_TRENDBRY = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<trend_vyvoj>).*(?=</trend_vyvoj>)")),
@@ -218,18 +306,42 @@ n2k_druhy_pre <- n2k_export %>%
       STA_STRUKTVEKBRY = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<str_strom>).*(?=</str_strom>)")),
       STA_STRUKTDRUBRY = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<druh_strom>).*(?=</druh_strom>)")),
       # NALEZ_CEVNATE ----
-      POP_POCETLODYH = dplyr::case_when(POP_PRESENCE == "ne" ~ 0,
-                                        POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_POCETSUMLOD"] ~ POCET,
-                                        TRUE ~ NA_real_),
-      POP_POCETVITAL = dplyr::case_when(POP_PRESENCE == "ne" ~ 0,
-                                        POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_VITAL"] ~ POCET,
-                                        TRUE ~ NA_real_),
-      STA_MAN = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<MAN>).*(?=</MAN>)")),
-      STA_MANPOTREBAVLIV = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<MAN_POTREBAVLIV>).*(?=</MAN_POTREBAVLIV>)")),
+      POP_POCETLODYH = dplyr::case_when(
+        POP_PRESENCE == "ne" ~ 0,
+        POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & 
+                                        limity$ID_IND %in% "POP_POCETSUMLOD"] ~ POCET,
+        TRUE ~ NA_real_),
+      POP_POCETVITAL = dplyr::case_when(
+        POP_PRESENCE == "ne" ~ 0,
+        POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & 
+                                        limity$ID_IND %in% "POP_VITAL"] ~ POCET,
+        TRUE ~ NA_real_),
+      STA_MAN = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<MAN>).*(?=</MAN>)"
+          )
+        ),
+      STA_MANPOTREBAVLIV = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<MAN_POTREBAVLIV>).*(?=</MAN_POTREBAVLIV>)"
+          )
+        ),
       STA_MANPOTREBA = NA,
       STA_MANVLIV = NA,
-      STA_POKRYVNOSTINVAZNI = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_POKRYVNOSTINVAZNI>).*(?=</STA_POKRYVNOSTINVAZNI>)")),
-      STA_POKRYVNOSTEXPANZNI = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_POKRYVNOSTEXPANZNI>).*(?=</STA_POKRYVNOSTEXPANZNI>)")),
+      STA_POKRYVNOSTINVAZNI = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_POKRYVNOSTINVAZNI>).*(?=</STA_POKRYVNOSTINVAZNI>)"
+          )
+        ),
+      STA_POKRYVNOSTEXPANZNI = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<STA_POKRYVNOSTEXPANZNI>).*(?=</STA_POKRYVNOSTEXPANZNI>)"
+          )
+        ),
       STA_POKRSTAR = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_POKRYVNOSTSTARINA>).*(?=</STA_POKRYVNOSTSTARINA>)")),
       STA_POKRDREV = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_POKRYVNOSTDREVIN>).*(?=</STA_POKRYVNOSTDREVIN>)")),
       STA_POKRDREVNIZ = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<STA_POKRYVNOSTDREVINNIZ>).*(?=</STA_POKRYVNOSTDREVINNIZ>)")),
@@ -259,32 +371,59 @@ n2k_druhy_pre <- n2k_export %>%
         str_replace_all(., "100 %", "3")
       ) %>%
   dplyr::distinct() %>%
-  dplyr::group_by(IDX_ND_AKCE, DRUH) %>%
-  dplyr::mutate(POP_POCETSUM = sum(POP_POCETSUM, na.rm = TRUE),
-                POP_POCET = dplyr::case_when(is.na(POP_POCETSUM) == FALSE ~ POP_POCET,
-                                             POP_POCETSUM > POP_POCET ~ POP_POCETSUM,
-                                             NA ~ POP_POCET)) %>%
-  dplyr::group_by(IDX_ND_AKCE, DRUH, DATUM) %>%
-  dplyr::mutate(POP_POCETMIN = dplyr::case_when(is.na(POP_POCET) == FALSE ~ POP_POCET,
-                                                POP_POCETNOST == 5 ~ 1001,
-                                                POP_POCETNOST == 4 ~ 100,
-                                                POP_POCETNOST == 3 ~ 10000,
-                                                POP_POCETNOST == 2 ~ 10000,
-                                                POP_POCETNOST == 1 ~ 10000),
-                POP_POCETMAX = dplyr::case_when(is.na(POP_POCET) == FALSE ~ POP_POCET,
-                                                POP_POCETNOST == 5 ~ 10000,
-                                                POP_POCETNOST == 4 ~ 1000,
-                                                POP_POCETNOST == 3 ~ 10000,
-                                                POP_POCETNOST == 2 ~ 10000,
-                                                POP_POCETNOST == 1 ~ 10000),
-                POP_POCETLODYHSUM = sum(POP_POCETLODYH, na.rm = TRUE),
-                POP_POCETPLOD = dplyr::case_when(POP_PRESENCE == "ne" ~ 0,
-                                                 POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_POCETSUMLOD"] ~ POCET,
-                                                 TRUE ~ NA_real_),
-                POP_VITAL = POP_POCETVITAL/POP_POCET*100) %>%
+  dplyr::group_by(
+    IDX_ND_AKCE, 
+    DRUH) %>%
+  dplyr::mutate(
+    POP_POCETSUM = sum(
+      POP_POCETSUM, 
+      na.rm = TRUE
+      ),
+    POP_POCET = dplyr::case_when(
+      is.na(POP_POCETSUM) == FALSE ~ POP_POCET,
+      POP_POCETSUM > POP_POCET ~ POP_POCETSUM,
+      NA ~ POP_POCET)) %>%
+  dplyr::group_by(
+    IDX_ND_AKCE, 
+    DRUH, 
+    DATUM
+    ) %>%
+  dplyr::mutate(
+    POP_POCETMIN = dplyr::case_when(
+      is.na(POP_POCET) == FALSE ~ POP_POCET,
+      POP_POCETNOST == 5 ~ 1001,
+      POP_POCETNOST == 4 ~ 100,
+      POP_POCETNOST == 3 ~ 10000,
+      POP_POCETNOST == 2 ~ 10000,
+      POP_POCETNOST == 1 ~ 10000
+      ),
+    POP_POCETMAX = dplyr::case_when(
+      is.na(POP_POCET) == FALSE ~ POP_POCET,
+      POP_POCETNOST == 5 ~ 10000,
+      POP_POCETNOST == 4 ~ 1000,
+      POP_POCETNOST == 3 ~ 10000,
+      POP_POCETNOST == 2 ~ 10000,
+      POP_POCETNOST == 1 ~ 10000
+      ),
+    POP_POCETLODYHSUM = sum(
+      POP_POCETLODYH, 
+      na.rm = TRUE
+      ),
+    POP_POCETPLOD = dplyr::case_when(
+      POP_PRESENCE == "ne" ~ 0,
+      POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & 
+                                      limity$ID_IND %in% "POP_POCETSUMLOD"] ~ POCET,
+      TRUE ~ NA_real_
+      ),
+    POP_VITAL = POP_POCETVITAL/POP_POCET*100) %>%
   dplyr::ungroup() %>%
-  dplyr::group_by(ID_ND_NALEZ) %>%
-  tidyr::separate_rows(POSKOZENI_ROSTLIN, sep = "; ") %>%
+  dplyr::group_by(
+    ID_ND_NALEZ
+    ) %>%
+  tidyr::separate_rows(
+    POSKOZENI_ROSTLIN, 
+    sep = "; "
+    ) %>%
   dplyr::distinct() %>%
   dplyr::mutate(
     POP_POSKPOC = dplyr::case_when(is.na(SP_POSKOZENI_ROSTLIN) == TRUE ~ NA,
@@ -321,11 +460,23 @@ n2k_druhy_pre <- n2k_export %>%
       )
     ) %>%
   dplyr::ungroup() %>%
-  tidyr::separate_rows(STA_PRUHLEDNOSTVODA, sep = ",") %>%
-  tidyr::separate_rows(STA_ZAPOJENICELK, sep = ",") %>%
-  dplyr::mutate(STA_ZAPOJENIDRN = dplyr::case_when(nchar(STA_ZAPOJENICELK) > 15 ~ str_match(STA_ZAPOJENICELK, "zapojený::\\s*(.*?)\\s*%")[,2],
-                                                    TRUE ~ "0"),
-                STA_ZAPOJENIDRN = readr::parse_number(STA_ZAPOJENICELK)) %>%
+  tidyr::separate_rows(
+    STA_PRUHLEDNOSTVODA, 
+    sep = ","
+    ) %>%
+  tidyr::separate_rows(
+    STA_ZAPOJENICELK, 
+    sep = ","
+    ) %>%
+  dplyr::mutate(
+    STA_ZAPOJENIDRN = dplyr::case_when(
+      nchar(STA_ZAPOJENICELK) > 15 ~ str_match(STA_ZAPOJENICELK, 
+                                               "zapojený::\\s*(.*?)\\s*%")[,2],
+      TRUE ~ "0"),
+    STA_ZAPOJENIDRN = readr::parse_number(
+      STA_ZAPOJENICELK
+      )
+    ) %>%
   dplyr::distinct() 
 
 # LOK_SPOLECNE ----
@@ -393,34 +544,68 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
 
 # populacni trendy odvozene od posledniho pozorovani POP_POCETMAX[1]
 n2k_druhy_lokpop_trend <- n2k_druhy_lokpop %>%
-  dplyr::group_by(KOD_LOKAL, DRUH) %>%
+  dplyr::group_by(
+    KOD_LOKAL, 
+    DRUH
+    ) %>%
   # serazeni sestupne podle roku
-  dplyr::arrange(desc(ROK)) %>%
+  dplyr::arrange(
+    desc(ROK)
+    ) %>%
   #dplyr::filter(CILMON == 1 & is.na(POP_POCETMAX) == FALSE & is.infinite(POP_POCETMAX) == FALSE) %>%
-  dplyr::reframe(POP_POCETMAXREF = POP_POCETMAX[3],
-                 POP_TREND1 = dplyr::case_when(POP_POCETMAX[1] >= POP_POCETMAXREF ~ 1,
-                                               POP_POCETMAX[1] < POP_POCETMAXREF ~ 0),
-                 POP_TREND2 = dplyr::case_when(POP_POCETMAX[2] >= POP_POCETMAXREF ~ 1,
-                                               POP_POCETMAX[2] < POP_POCETMAXREF ~ 0),
-                 POP_TREND = sum(POP_TREND1, POP_TREND2, na.rm = TRUE),
-                 POP_TRENDLM = coef(lm(POP_POCETMAX ~ ROK))[2],
-                 POP_POCETNOSTMAX = max(POP_POCETNOST, na.rm = TRUE),
-                 POP_POCETPRUM = dplyr::case_when(POP_POCETNOSTMAX == 1 ~ n()*5,
-                                                  POP_POCETNOSTMAX == 2 ~ n()*25,
-                                                  POP_POCETNOSTMAX == 3 ~ n()*75,
-                                                  POP_POCETNOSTMAX == 4 ~ n()*500,
-                                                  POP_POCETNOSTMAX == 5 ~ n()*5000),
-                 POP_POCETNMIN = dplyr::case_when(POP_POCETNOSTMAX == 1 ~ n()*1,
-                                                  POP_POCETNOSTMAX == 2 ~ n()*11,
-                                                  POP_POCETNOSTMAX == 3 ~ n()*51,
-                                                  POP_POCETNOSTMAX == 4 ~ n()*101,
-                                                  POP_POCETNOSTMAX == 5 ~ n()*1001),
-                 POP_POCETNMAX = dplyr::case_when(POP_POCETNOSTMAX == 1 ~ n()*10,
-                                                  POP_POCETNOSTMAX == 2 ~ n()*50,
-                                                  POP_POCETNOSTMAX == 3 ~ n()*100,
-                                                  POP_POCETNOSTMAX == 4 ~ n()*1000,
-                                                  POP_POCETNOSTMAX == 5 ~ n()*9000)
-  ) %>%
+  dplyr::reframe(
+    POP_POCETMAXREF = POP_POCETMAX[3],
+    POP_TREND1 = dplyr::case_when(
+      POP_POCETMAX[1] >= POP_POCETMAXREF ~ 1,
+      POP_POCETMAX[1] < POP_POCETMAXREF ~ 0
+      ),
+    POP_TREND2 = dplyr::case_when(
+      POP_POCETMAX[2] >= POP_POCETMAXREF ~ 1,
+      POP_POCETMAX[2] < POP_POCETMAXREF ~ 0
+      ),
+    POP_TREND = sum(
+      POP_TREND1, 
+      POP_TREND2, 
+      na.rm = TRUE
+      ),
+    POP_TRENDLM = coef(
+      lm(
+        POP_POCETMAX ~ ROK))[2],
+    POP_POCETNOSTMAX = max(
+      POP_POCETNOST, 
+      na.rm = TRUE
+      ),
+    POP_POCETSTRED = dplyr::case_when(
+      POP_POCETNOSTMAX == 1 ~ n()*5,
+      POP_POCETNOSTMAX == 2 ~ n()*25,
+      POP_POCETNOSTMAX == 3 ~ n()*75,
+      POP_POCETNOSTMAX == 4 ~ n()*550,
+      POP_POCETNOSTMAX == 5 ~ n()*5500,
+      POP_POCETNOSTMAX == 6 ~ n()*55000,
+      POP_POCETNOSTMAX == 7 ~ n()*550000,
+      POP_POCETNOSTMAX == 8 ~ n()*1000000
+      ),
+    POP_POCETNMIN = dplyr::case_when(
+      POP_POCETNOSTMAX == 1 ~ n()*1,
+      POP_POCETNOSTMAX == 2 ~ n()*11,
+      POP_POCETNOSTMAX == 3 ~ n()*51,
+      POP_POCETNOSTMAX == 4 ~ n()*101,
+      POP_POCETNOSTMAX == 5 ~ n()*1001,
+      POP_POCETNOSTMAX == 6 ~ n()*10001,
+      POP_POCETNOSTMAX == 7 ~ n()*100001,
+      POP_POCETNOSTMAX == 8 ~ n()*1000000
+      ),
+    POP_POCETNMAX = dplyr::case_when(
+      POP_POCETNOSTMAX == 1 ~ n()*10,
+      POP_POCETNOSTMAX == 2 ~ n()*50,
+      POP_POCETNOSTMAX == 3 ~ n()*100,
+      POP_POCETNOSTMAX == 4 ~ n()*1000,
+      POP_POCETNOSTMAX == 5 ~ n()*10000,
+      POP_POCETNOSTMAX == 6 ~ n()*100000,
+      POP_POCETNOSTMAX == 7 ~ n()*1000000,
+      POP_POCETNOSTMAX == 8 ~ n()*1000000
+      )
+    ) %>%
   dplyr::ungroup()
   
 
@@ -460,7 +645,11 @@ n2k_druhy_long <- n2k_druhy %>%
     ) %>%
   dplyr::mutate(
     IND_GRP = dplyr::case_when(
-      TYP_IND %in% c("min", "max") ~ "minmax",
+      TYP_IND %in% c(
+        "min", 
+        "max"
+        )
+      ~ "minmax",
       TRUE ~ TYP_IND
       )
     ) 
@@ -497,8 +686,15 @@ n2k_druhy_lim_pre <- n2k_druhy_long %>%
       TRUE ~ STAV_IND
       )
     ) %>%
-  dplyr::group_by(ID_ND_NALEZ, ID_IND) %>%
-  dplyr::arrange(-STAV_IND) %>%
+  dplyr::group_by(
+    ID_ND_NALEZ, 
+    ID_IND
+    ) %>%
+  dplyr::arrange(
+    dplyr::desc(
+      STAV_IND
+      )
+    ) %>%
   dplyr::slice(1) %>%
   dplyr::ungroup()
 
@@ -525,6 +721,9 @@ n2k_druhy_lim <- n2k_druhy_lim_pre %>%
     ) %>%
   dplyr::arrange(ID_ND_NALEZ)
 
-ncol_druhy_lim <- ncol(n2k_druhy_lim)
+ncol_druhy_lim <- 
+  ncol(
+    n2k_druhy_lim
+    )
 
 # KONEC SKRIPTU ----
