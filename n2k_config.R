@@ -74,7 +74,10 @@ ncol_orig <- ncol(n2k_export)
 #--------------------------------------------------#
 ## Zdroj cileného monitoringu ---- 
 #--------------------------------------------------#
-CIS_CILMON <- read.csv("cil_mon_zdroj.csv", fileEncoding = "Windows-1250")
+CIS_CILMON <- readr::read_csv(
+  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/cil_mon_zdroj.csv", 
+  locale = readr::locale(encoding = "Windows-1250")
+)
 
 #--------------------------------------------------#
 ## Rok hodnoceni ---- 
