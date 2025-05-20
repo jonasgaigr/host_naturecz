@@ -1,5 +1,6 @@
 # LOKALITA LIMITY - PRIPRAVA ----
-n2k_druhy_lok_pre <- n2k_druhy_lim %>%
+n2k_druhy_lok_pre <- 
+  n2k_druhy_lim %>%
   dplyr::group_by(
     kod_chu, 
     DRUH, 
@@ -108,6 +109,7 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   # pokud sumklic spatny tak spatny, pokud sum ost tak spatny, pokud sumost tak zhorseny, pokud nic z toho tak dobry, TRUE ~ neznamy pres napojeni na limity
   dplyr::mutate(
     CELKOVE = dplyr::case_when(
+      is.na(CILMON) == TRUE ~ NA_real_,
       unique(IND_SUMKLIC) < LENIND_SUMKLIC ~ 0,
       unique(IND_SUMOST) < (LENIND_SUMOST - 2) ~ 0,
       unique(IND_SUMOST) < (LENIND_SUMOST - 1) ~ 0.5,
@@ -124,6 +126,7 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
     ) %>%
   dplyr::mutate(
     HOD_IND = dplyr::case_when(
+      is.na(STAV_IND) == TRUE ~ "neznámý",
       ID_IND == "CELKOVE_HODNOCENI" & 
         STAV_IND == 0 
       ~ "špatný",
@@ -158,14 +161,16 @@ n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   dplyr::pull(ID_ND_AKCE)
 
 # FILTR NALEZU PODLE VYBRANEHO ID AKCE (POLE) ----
-n2k_druhy_pole1eval <- n2k_druhy_lok %>%
+n2k_druhy_pole1eval <- 
+  n2k_druhy_lok %>%
   dplyr::filter(
     ID_ND_AKCE %in% n2k_druhy_pole1_idakce
     ) %>%
   dplyr::ungroup()
 
 # VYBER ID AKCE REPREZENTUJICI LOKALITU ----
-n2k_druhy_lok_idakce <- n2k_druhy_lok %>%
+n2k_druhy_lok_idakce <- 
+  n2k_druhy_lok %>%
   dplyr::group_by(
     kod_chu, 
     DRUH, 
@@ -194,8 +199,14 @@ write_lok <- write.csv(
       ., 
       evl %>%
         sf::st_drop_geometry() %>%
-        dplyr::select(SITECODE, NAZEV),
-      by = c("kod_chu" = "SITECODE")) %>%
+        dplyr::select(
+          SITECODE, 
+          NAZEV
+          ),
+      by = c(
+        "kod_chu" = "SITECODE"
+        )
+      ) %>%
     dplyr::left_join(
       ., 
       n2k_druhy_obdobi_chu,
