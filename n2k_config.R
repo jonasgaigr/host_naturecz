@@ -42,7 +42,33 @@ if(!isTRUE(require(rn2kcz, quietly = TRUE))) {
   require(rn2kcz)}
 
 #----------------------------------------------------------#
-# Nacteni dat -----
+# Nacteni lokalnich dat -----
+#----------------------------------------------------------#
+
+#--------------------------------------------------#
+## Cesta k lokalnim datum ---- 
+#--------------------------------------------------#
+
+slozka_lokal <- "C:/Users/jonas.gaigr/Documents/host_data/"
+
+#------------------------------------------------------#
+## Zdrojova data - export z NDOP ----
+# export obsahuje data o vyskytu citlivych druhu: 
+# kompletni pouze pro overene uzivatele,
+# bez vyskytu citlivych druhu na vyzadani na jonas.gaigr@aopk.gov.cz
+#------------------------------------------------------#
+n2k_export <- readr::read_csv2(
+  paste0(
+    slozka_lokal,
+    "evl_data_export_20250408.csv"
+    ), 
+  locale = readr::locale(encoding = "Windows-1250")
+)
+
+ncol_orig <- ncol(n2k_export)
+
+#----------------------------------------------------------#
+# Nacteni remote dat -----
 #----------------------------------------------------------#
 
 #--------------------------------------------------#
@@ -58,12 +84,14 @@ current_year <- as.numeric(format(Sys.Date(), "%Y")) - 1
 #--------------------------------------------------#
 ## Limity hodnoceni stavu ---- 
 #--------------------------------------------------#
-limity_cev <- read.csv(
+limity_cev <- readr::read_csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/limity_cevky.csv", 
-  fileEncoding = "Windows-1250")
-limity <- read.csv(
+  locale = readr::locale(encoding = "Windows-1250")
+  )
+
+limity <- readr::read_csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/limity_vse.csv", 
-  fileEncoding = "Windows-1250"
+  locale = readr::locale(encoding = "Windows-1250")
   ) %>%
   dplyr::bind_rows(
     ., 
@@ -113,16 +141,18 @@ limity <- read.csv(
 #--------------------------------------------------#
 ## Ciselnik indikatoru hodnoceni stavu ---- 
 #--------------------------------------------------#
-indikatory_id <- read.csv(
+indikatory_id <- readr::read_csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/cis_indikatory_popis.csv", 
-  fileEncoding = "Windows-1250")
+  locale = readr::locale(encoding = "Windows-1250")
+)
 
 #--------------------------------------------------#
 ## Ciselnik periody hodnoceni stavu ---- 
 #--------------------------------------------------#
-cis_evd_perioda <- read.csv("https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/cis_evd_perioda.csv", 
-                            fileEncoding = "Windows-1250"
-                            ) %>%
+cis_evd_perioda <- readr::read_csv(
+  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/cis_evd_perioda.csv", 
+  locale = readr::locale(encoding = "Windows-1250")
+  ) %>%
   dplyr::select(
     TAXON, 
     PERIODA
@@ -206,20 +236,6 @@ n2k_union <- sf::st_join(
 biotop_evd <- readr::read_csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/biotopy_evd_hmyz.csv"
   )
-
-#------------------------------------------------------#
-# Zdrojova data - export z NDOP ----
-# export obsahuje data o vyskytu citlivych druhu: 
-# kompletni pouze pro overene uzivatele,
-# bez vyskytu citlivych druhu na vyzadani na jonas.gaigr@aopk.gov.cz
-#------------------------------------------------------#
-n2k_export <- readr::read_csv2(
-  # NUTNE DOPLNIT LOKALNI CESTU
-  "C:/Users/jonas.gaigr/Documents/host_data/evl_data_export_20250408.csv", 
-  locale = readr::locale(encoding = "Windows-1250")
-  )
-
-ncol_orig <- ncol(n2k_export)
 
 #------------------------------------------------------#
 # END ----
