@@ -87,11 +87,18 @@ current_year <- as.numeric(format(Sys.Date(), "%Y")) - 1
 #--------------------------------------------------#
 ## Limity hodnoceni stavu ---- 
 #--------------------------------------------------#
+
+#------------------------------------------#
+### Limity - cévnaté rostliny ---- 
+#------------------------------------------#
 limity_cev <- readr::read_csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/limity_cevky.csv", 
   locale = readr::locale(encoding = "Windows-1250")
   )
 
+#------------------------------------------#
+### Limity - hlavní soubor ---- 
+#------------------------------------------#
 limity <- readr::read_csv(
   "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/limity_vse.csv", 
   locale = readr::locale(encoding = "Windows-1250")
