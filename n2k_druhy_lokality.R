@@ -224,4 +224,6 @@ write_lok <- write.csv(
   row.names = TRUE,
   fileEncoding = "Windows-1250")
 
+write_lok
+
 # KONEC SKRIPTU ----
