@@ -1,4 +1,6 @@
-# CHU_POLE ----
+#----------------------------------------------------------#
+# Priprava dilcich objektu -----
+#----------------------------------------------------------#
 n2k_druhy_chu_pole1 <- 
   n2k_druhy_pole1eval %>%
   dplyr::group_by(
@@ -38,7 +40,10 @@ n2k_druhy_chu_pole1 <-
     DRUH
     ) %>%
   dplyr::mutate(
-    POP_PROCPOLE1D = round(POP_POCETPOLE1D/POP_POCETPOLE1*100, 3),
+    POP_PROCPOLE1D = round(
+      POP_POCETPOLE1D/POP_POCETPOLE1*100,
+      3
+      ),
     # CHU_POLE_HMYZ ----
     # pokryvnost preferovanych biotopu evd
     STA_HABPOKRYVPRE = {
@@ -46,15 +51,28 @@ n2k_druhy_chu_pole1 <-
                                         biotop_evd$DRUH == DRUH]
       if (length(x) == 0) NA_real_ else unique(x)
     },
-    STA_HABPOKRYV = dplyr::case_when(is.na(STA_HABPOKRYVPRE) == TRUE ~ NA,
-                                     TRUE ~ STA_HABPOKRYVPRE)) %>%
-  dplyr::select(-STA_HABPOKRYVPRE) %>%
-  dplyr::mutate(across(.cols = 7:ncol(.)-2, .fns = ~ as.character(.))) %>%
-  tidyr::pivot_longer(.,
-                      cols = c(8:ncol(.)),
-                      names_to = "ID_IND",
-                      values_to = "HOD_IND") %>%
-  dplyr::mutate(HOD_IND = as.character(HOD_IND)) %>%
+    STA_HABPOKRYV = dplyr::case_when(
+      is.na(STA_HABPOKRYVPRE) == TRUE ~ NA,
+      TRUE ~ STA_HABPOKRYVPRE)
+    ) %>%
+  dplyr::select(
+    -STA_HABPOKRYVPRE
+    ) %>%
+  dplyr::mutate(
+    across(
+      .cols = 7:ncol(.)-2,
+      .fns = ~ as.character(.)
+      )
+    ) %>%
+  tidyr::pivot_longer(
+    .,
+    cols = c(8:ncol(.)),
+    names_to = "ID_IND",
+    values_to = "HOD_IND"
+    ) %>%
+  dplyr::mutate(
+    HOD_IND = as.character(HOD_IND)
+    ) %>%
   dplyr::distinct() %>%
   dplyr::arrange(ID_ND_AKCE)
 
@@ -113,11 +131,11 @@ n2k_druhy_chu_lok <-
         ), 
       na.rm = TRUE),
     POP_PROCDOB = POP_POCETDOB/POP_POCETSUM*100,
-    # CHU_LOK_HMYZ ----
-    # CHU_OSTATNIBEZ ----
-    # CHU_OBOJZIVELNICI ----
-    # CHU_RYBY ----
-    # CHU_SAVCI ----
+    ## CHU_LOK_HMYZ ----
+    ## CHU_LOK_OSTATNIBEZ ----
+    ## CHU_LOK_OBOJZIVELNICI ----
+    ## CHU_LOK_RYBY ----
+    ## CHU_LOK_SAVCI ----
     POP_POCETZIM = sum(
       case_when(
         ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
@@ -201,14 +219,20 @@ n2k_druhy_chu_lok <-
       na.rm = TRUE),
     POP_VITALLET = POP_POCETLET/POP_POCETLETREF,
     POP_REPROCHI = POP_POCETLETS2/POP_POCETLETS1,
-    # CHU_MECHOROSTY ----
+    ## CHU_LOK_MECHOROSTY ----
     
-    # CHU_CEVNATE ----
+    ## CHU_LOK_CEVNATE ----
     
-    # CHU_PTACI ----
+    ## CHU_LOK_PTACI ----
     
-    # CHU_LONG ----
-  )  %>%
+
+  )
+#--------------------------------------------------#
+## Long format pripravneho objektu ---- 
+#--------------------------------------------------#
+
+n2k_druhy_chu_lok_long <- 
+  n2k_druhy_chu_lok %>%
   dplyr::mutate(
     across(.cols = 7:ncol(.), 
            .fns = ~ as.character(.)
@@ -276,7 +300,9 @@ n2k_druhy_chu_lok <-
       )
     )
 
-# CHU ----
+#----------------------------------------------------------#
+# Konsolidace uzemi -----
+#----------------------------------------------------------#
 n2k_druhy_chu <- 
   n2k_druhy_chu_lok %>%
   dplyr::group_by(
@@ -515,7 +541,9 @@ n2k_druhy_chu <-
     ) %>%
   dplyr::distinct()
 
-# ZAPIS DAT ----
+#----------------------------------------------------------#
+# Zapis dat -----
+#----------------------------------------------------------#
   
 chu_export <-
   function() {
