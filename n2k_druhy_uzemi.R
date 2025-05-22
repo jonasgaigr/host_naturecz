@@ -1,6 +1,10 @@
 #----------------------------------------------------------#
 # Priprava dilcich objektu -----
 #----------------------------------------------------------#
+#--------------------------------------------------#
+## Agregace po poli 1. radu -----
+#--------------------------------------------------#
+
 n2k_druhy_chu_pole1 <- 
   n2k_druhy_pole1eval %>%
   dplyr::group_by(
@@ -44,7 +48,6 @@ n2k_druhy_chu_pole1 <-
       POP_POCETPOLE1D/POP_POCETPOLE1*100,
       3
       ),
-    # CHU_POLE_HMYZ ----
     # pokryvnost preferovanych biotopu evd
     STA_HABPOKRYVPRE = {
       x <- biotop_evd$BIOTOP_PROCENTO[biotop_evd$SITECODE == kod_chu & 
@@ -76,7 +79,9 @@ n2k_druhy_chu_pole1 <-
   dplyr::distinct() %>%
   dplyr::arrange(ID_ND_AKCE)
 
-# CHU_LOK ----
+#--------------------------------------------------#
+## Agregace po lokalite -----
+#--------------------------------------------------#
 n2k_druhy_chu_lok <- 
   n2k_druhy_lokeval %>%
   dplyr::group_by(
@@ -84,7 +89,7 @@ n2k_druhy_chu_lok <-
     DRUH
     ) %>%
   dplyr::reframe(
-    # CHU_SPOLECNE ----
+    ## CHU_LOK_SPOLECNE ----
     ROK = toString(unique(ROK)),
     POLE = toString(unique(POLE)),
     NAZEV_LOK = toString(unique(NAZEV_LOK)),
@@ -93,6 +98,7 @@ n2k_druhy_chu_lok <-
       CILMON, 
       na.rm = TRUE
       ),
+    CELKOVE_HODNOCENI = NA,
     POP_PRESENCE = dplyr::case_when(ID_IND == "POP_PRESENCE" & grepl("ano", HOD_IND) == TRUE ~ "ano", 
                                     ID_IND == "POP_PRESENCE" & grepl("ne", HOD_IND) == TRUE ~ "ne", 
                                     TRUE ~ NA_character_), 
@@ -227,6 +233,9 @@ n2k_druhy_chu_lok <-
     
 
   )
+
+
+
 #--------------------------------------------------#
 ## Long format pripravneho objektu ---- 
 #--------------------------------------------------#
@@ -298,13 +307,36 @@ n2k_druhy_chu_lok_long <-
       is.na(HOD_IND) == TRUE ~ "ne",
       TRUE ~ KLIC
       )
-    )
+    ) %>%
+  dplyr::bind_rows(
+    n2k_druhy_chu_lok_long %>%
+      dplyr::distinct(
+        kod_chu, 
+        DRUH, 
+        ROK, 
+        ID_ND_AKCE, 
+        POLE, 
+        NAZEV_LOK, 
+        CILMON
+        ) %>%
+      dplyr::mutate(
+        ID_IND = "CELKOVE_HODNOCENI",
+        HOD_IND = NA_character_,
+        STAV_IND = NA_real_,
+        TYP_IND = NA_character_,
+        LIM_IND = NA_character_,
+        IND_GRP = NA_character_,
+        KLIC = NA_character_
+      )
+  ) %>%
+  # Teď odstraníme všechny sloupce, co začínají na '...'
+  dplyr::select(-dplyr::starts_with("..."))
 
 #----------------------------------------------------------#
 # Konsolidace uzemi -----
 #----------------------------------------------------------#
 n2k_druhy_chu <- 
-  n2k_druhy_chu_lok %>%
+  n2k_druhy_chu_lok_long %>%
   dplyr::group_by(
     kod_chu, 
     DRUH, 
