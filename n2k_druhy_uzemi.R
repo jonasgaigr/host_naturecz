@@ -307,7 +307,9 @@ n2k_druhy_chu_lok_long <-
       is.na(HOD_IND) == TRUE ~ "ne",
       TRUE ~ KLIC
       )
-    ) %>%
+    ) 
+n2k_druhy_chu_lok_long <- 
+  n2k_druhy_chu_lok_long %>%
   dplyr::bind_rows(
     n2k_druhy_chu_lok_long %>%
       dplyr::distinct(
@@ -484,6 +486,9 @@ n2k_druhy_chu <-
       ID_IND != "CELKOVE_HODNOCENI" & is.na(LIM_IND) == TRUE ~ "nehodnocen",
       is.na(STAV_IND) == TRUE ~ "neznámý",
       is.infinite(STAV_IND) == TRUE ~ "neznámý",
+      HOD_IND == " " ~ "neznámý",
+      ID_IND == "STA_HABPOKRYV" ~ "neznámý",
+      is.na(HOD_IND) == TRUE ~ "neznámý",
       STAV_IND == 0 ~ "špatný",
       STAV_IND == 0.5 ~ "zhoršený",
       STAV_IND == 1 ~ "dobrý",
