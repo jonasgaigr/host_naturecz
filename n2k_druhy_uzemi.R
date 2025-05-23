@@ -17,7 +17,7 @@ n2k_druhy_chu_pole1 <-
     POLE = toString(unique(POLE)),
     NAZEV_LOK = toString(unique(NAZEV_LOK)),
     ID_ND_AKCE = toString(unique(ID_ND_AKCE)),
-    CILMON = max(
+    CILMON_CHU = max(
       CILMON, 
       na.rm = TRUE
       ),
@@ -56,7 +56,7 @@ n2k_druhy_chu_pole1 <-
     },
     STA_HABPOKRYV = dplyr::case_when(
       is.na(STA_HABPOKRYVPRE) == TRUE ~ NA,
-      TRUE ~ STA_HABPOKRYVPRE)
+      TRUE ~ STA_HABPOKRYVPRE*100)
     ) %>%
   dplyr::select(
     -STA_HABPOKRYVPRE
@@ -94,7 +94,7 @@ n2k_druhy_chu_lok <-
     POLE = toString(unique(POLE)),
     NAZEV_LOK = toString(unique(NAZEV_LOK)),
     ID_ND_AKCE = toString(unique(ID_ND_AKCE)),
-    CILMON = max(
+    CILMON_CHU = max(
       CILMON, 
       na.rm = TRUE
       ),
@@ -319,7 +319,7 @@ n2k_druhy_chu_lok_long <-
         ID_ND_AKCE, 
         POLE, 
         NAZEV_LOK, 
-        CILMON
+        CILMON_CHU
         ) %>%
       dplyr::mutate(
         ID_IND = "CELKOVE_HODNOCENI",
@@ -386,8 +386,8 @@ n2k_druhy_chu <-
     KLIC = unique(KLIC),
     UROVEN = unique(UROVEN),
     IND_GRP = unique(IND_GRP),
-    CILMON = max(
-      CILMON, 
+    CILMON_CHU = max(
+      CILMON_CHU, 
       na.rm = TRUE
       )
   ) %>%
@@ -529,7 +529,7 @@ n2k_druhy_chu <-
     datum_hodnoceni = Sys.Date()
     ) %>%
   dplyr::filter(
-    CILMON == 1
+    CILMON_CHU == 1
     ) %>%
   dplyr::rename(
     nazev_chu = NAZEV, 
@@ -562,11 +562,6 @@ n2k_druhy_chu <-
       pracoviste
       ),
     metodika = 15087
-  ) %>%
-  dplyr::filter(
-    grepl("Jihočeského", oop, ignore.case = TRUE) == TRUE
-    # (grepl("Ústeckého", oop, ignore.case = TRUE) == TRUE & druh == "Limoniscus violaceus")
-    # grepl("Ústeckého", oop, ignore.case = TRUE) == TRUE
   ) %>%
   dplyr::select(
     -c(
