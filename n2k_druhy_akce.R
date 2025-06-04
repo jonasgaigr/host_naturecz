@@ -133,6 +133,7 @@ n2k_druhy_pre <- n2k_export %>%
                                      REL_POC == "do 10" ~ 1,
                                      REL_POC == "1-10" ~ 1,
                                      grepl("počet samců: do 10", POZN_TAX) ~ 1),
+    POP_PASTIPOCET = stringr::str_extract(STRUKT_POZN, "(?<=<POP_PASTIPOCET>).*(?=</POP_PASTIPOCET>)"),
     # cilova jednotka, k nacteni z ciselniku, k doplneni Martinem
     POP_CILJEDNOTKA = NA,
     POP_KOEFICIENT = dplyr::case_when(POP_CILJEDNOTKA == POCITANO ~ 1,
