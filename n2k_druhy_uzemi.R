@@ -517,7 +517,8 @@ n2k_druhy_chu <-
   dplyr::left_join(.,
                    rp_code,
                    by = join_by("kod_chu")) %>%
-  dplyr::left_join(
+  # dplyr::right_join() zajistuje export hodnoceni pouze pro predmety ochrany
+  dplyr::right_join(
     ., 
     n2k_oop,
     by = c("kod_chu" = "SITECODE")
