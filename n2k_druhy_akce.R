@@ -383,12 +383,8 @@ n2k_druhy_pre <- n2k_export %>%
     POP_POCET = dplyr::case_when(
       is.na(POP_POCETSUM) == FALSE ~ POP_POCET,
       POP_POCETSUM > POP_POCET ~ POP_POCETSUM,
-      NA ~ POP_POCET)) %>%
-  dplyr::group_by(
-    IDX_ND_AKCE, 
-    DRUH, 
-    DATUM
-    ) %>%
+      NA ~ POP_POCET),
+    POP_POCETKONCPAST = POP_POCET/POP_PASTIPOCET) %>%
   dplyr::mutate(
     POP_POCETMIN = dplyr::case_when(
       is.na(POP_POCET) == FALSE ~ POP_POCET,
