@@ -19,3 +19,7 @@ n2k_druhy_obdobi_chu <- n2k_druhy %>%
     HODNOCENE_OBDOBI_OD = min(DATUM, na.rm = TRUE),
     HODNOCENE_OBDOBI_DO = max(DATUM, na.rm = TRUE)
   )
+
+#----------------------------------------------------------#
+# KONEC ----
+#----------------------------------------------------------#
