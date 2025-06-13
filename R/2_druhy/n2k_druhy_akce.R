@@ -283,7 +283,12 @@ n2k_druhy_pre <- n2k_export %>%
         STA_ZASTINENIHLADINA <= STA_ZASTINENILITORAL ~ STA_ZASTINENILITORAL,
         TRUE ~ STA_ZASTINENIHLADINA),
       # NALEZ_RYBY ----
-      
+      POP_DELKYJEDINCI = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<velikosti>).*(?=</velikosti>)"
+        )
+      ),
       # NALEZ_SAVCI ----
       POP_PRESENCE_ZIMNI = max(
         POP_PRESENCE[(ROK == ROK & 
@@ -474,6 +479,23 @@ n2k_druhy_pre <- n2k_export %>%
       STA_ZAPOJENICELK
       )
     ) %>%
+  tidyr::separate_rows(
+    POP_DELKYJEDINCI,
+    sep = ","
+  ) %>%
+  dplyr::mutate(
+    POP_DELKYJEDINCIKAT = dplyr::case_when(
+      POP_DELKYJEDINCI >= cis_ryby_delky$MIN[cis_ryby_delky$DRUH == DRUH & 
+                                                    cis_ryby_delky$KAT == 1] &
+        POP_DELKYJEDINCI <= cis_ryby_delky$MAX[cis_ryby_delky$DRUH == DRUH & 
+                                                 cis_ryby_delky$KAT == 1] ~ 1,
+      POP_DELKYJEDINCI >= cis_ryby_delky$MIN[cis_ryby_delky$DRUH == DRUH & 
+                                               cis_ryby_delky$KAT == 2] &
+        POP_DELKYJEDINCI <= cis_ryby_delky$MAX[cis_ryby_delky$DRUH == DRUH & 
+                                                 cis_ryby_delky$KAT == 2] ~ 1,
+      TRUE ~ NA_integer_
+    )
+  ) %>%
   dplyr::distinct() 
 
 # LOK_SPOLECNE ----
