@@ -1,4 +1,6 @@
-# PŘÍPRAVA INDIKÁTORŮ ----
+#----------------------------------------------------------#
+# Nalez - priprava indikatoru na urovni -----
+#----------------------------------------------------------#
 n2k_druhy_pre <- n2k_export %>%
   #dplyr::filter(DRUH == "Epidalea calamita") %>%
   dplyr::rename(POLE = POLE_1_RAD) %>% 
@@ -133,7 +135,12 @@ n2k_druhy_pre <- n2k_export %>%
                                      REL_POC == "do 10" ~ 1,
                                      REL_POC == "1-10" ~ 1,
                                      grepl("počet samců: do 10", POZN_TAX) ~ 1),
-    POP_PASTIPOCET = stringr::str_extract(STRUKT_POZN, "(?<=<POP_PASTIPOCET>).*(?=</POP_PASTIPOCET>)"),
+    POP_PASTIPOCET = readr::parse_number(
+      stringr::str_extract(
+        STRUKT_POZN, 
+        "(?<=<POP_PASTIPOCET>).*(?=</POP_PASTIPOCET>)"
+        )
+      ),
     # cilova jednotka, k nacteni z ciselniku, k doplneni Martinem
     POP_CILJEDNOTKA = NA,
     POP_KOEFICIENT = dplyr::case_when(POP_CILJEDNOTKA == POCITANO ~ 1,
@@ -389,7 +396,12 @@ n2k_druhy_pre <- n2k_export %>%
       is.na(POP_POCETSUM) == FALSE ~ POP_POCET,
       POP_POCETSUM > POP_POCET ~ POP_POCETSUM,
       NA ~ POP_POCET),
-    POP_POCETKONCPAST = POP_POCET/POP_PASTIPOCET) %>%
+    POP_POCETKONCPAST = dplyr::case_when(
+      is.na(POP_PASTIPOCET) == TRUE ~ NA_real_,
+      is.infinite(POP_PASTIPOCET) == TRUE ~ NA_real_,
+      TRUE ~ POP_POCET/POP_PASTIPOCET
+      )
+    ) %>%
   dplyr::mutate(
     POP_POCETMIN = dplyr::case_when(
       is.na(POP_POCET) == FALSE ~ POP_POCET,
@@ -483,18 +495,23 @@ n2k_druhy_pre <- n2k_export %>%
     POP_DELKYJEDINCI,
     sep = ","
   ) %>%
-  dplyr::mutate(
-    POP_DELKYJEDINCIKAT = dplyr::case_when(
-      POP_DELKYJEDINCI >= cis_ryby_delky$MIN[cis_ryby_delky$DRUH == DRUH & 
-                                                    cis_ryby_delky$KAT == 1] &
-        POP_DELKYJEDINCI <= cis_ryby_delky$MAX[cis_ryby_delky$DRUH == DRUH & 
-                                                 cis_ryby_delky$KAT == 1] ~ 1,
-      POP_DELKYJEDINCI >= cis_ryby_delky$MIN[cis_ryby_delky$DRUH == DRUH & 
-                                               cis_ryby_delky$KAT == 2] &
-        POP_DELKYJEDINCI <= cis_ryby_delky$MAX[cis_ryby_delky$DRUH == DRUH & 
-                                                 cis_ryby_delky$KAT == 2] ~ 1,
-      TRUE ~ NA_integer_
-    )
+  mutate(POP_DELKYJEDINCINUM = as.numeric(POP_DELKYJEDINCI)) %>%
+  rowwise() %>%
+  mutate(
+    POP_DELKYJEDINCIKAT = {
+      kat <- NA_integer_
+      for (k in 1:3) {
+        prah <- cis_ryby_delky %>% 
+          filter(DRUH == DRUH, KAT == k)
+        if (nrow(prah) == 1) {
+          if (POP_DELKYJEDINCINUM >= prah$MIN & POP_DELKYJEDINCINUM <= prah$MAX) {
+            kat <- k
+            break
+          }
+        }
+      }
+      kat
+    }
   ) %>%
   dplyr::distinct() 
 
@@ -520,6 +537,11 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
     # LOK_OSTATNIBEZ ----
     # LOK_OBOJZIVELNICI ----
     # LOK_RYBY ----
+    POP_VITALITA = unique(
+      POP_DELKYJEDINCIKAT
+    ) %>%
+      na.omit() %>%
+      length(),
     # LOK_SAVCI ----
     POP_POCETZIM = max(POP_POCET[(ROK == current_year & MESIC < 5) |
                                    (ROK == current_year - 1 & MESIC > 9)], 
