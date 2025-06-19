@@ -1,5 +1,5 @@
 #----------------------------------------------------------#
-# Nalez - priprava indikatoru na urovni -----
+# Nalez - priprava indikatoru na urovni ----- 
 #----------------------------------------------------------#
 n2k_druhy_pre <- n2k_export %>%
   #dplyr::filter(DRUH == "Epidalea calamita") %>%
@@ -83,8 +83,9 @@ n2k_druhy_pre <- n2k_export %>%
     DRUH %in% sites_subjects$nazev_lat & kod_chu %in% sites_subjects$site_code
   ) %>%
   #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
-  dplyr::filter(SKUPINA %in% c("Motýli", "Brouci", "Vážky")) %>%
+  #dplyr::filter(SKUPINA %in% c("Motýli", "Brouci", "Vážky")) %>%
   #dplyr::filter(SKUPINA == "Obojživelníci") %>%
+  dplyr::filter(SKUPINA == "Ryby a mihule") %>%
   #filter(SKUPINA %in% c("Letouni", "Savci")) %>%
   # NALEZ_SPOLECNE ---- 
   dplyr::mutate(
@@ -495,24 +496,31 @@ n2k_druhy_pre <- n2k_export %>%
     POP_DELKYJEDINCI,
     sep = ","
   ) %>%
-  mutate(POP_DELKYJEDINCINUM = as.numeric(POP_DELKYJEDINCI)) %>%
-  rowwise() %>%
-  mutate(
+  dplyr::mutate(
+    POP_DELKYJEDINCINUM = as.numeric(
+      POP_DELKYJEDINCI
+      )
+    ) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(
     POP_DELKYJEDINCIKAT = {
-      kat <- NA_integer_
-      for (k in 1:3) {
-        prah <- cis_ryby_delky %>% 
-          filter(DRUH == DRUH, KAT == k)
-        if (nrow(prah) == 1) {
-          if (POP_DELKYJEDINCINUM >= prah$MIN & POP_DELKYJEDINCINUM <= prah$MAX) {
-            kat <- k
-            break
-          }
-        }
-      }
-      kat
+      # Get thresholds for this row's DRUH
+      min1 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 1) %>% pull(MIN)
+      max1 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 1) %>% pull(MAX)
+      min2 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 2) %>% pull(MIN)
+      max2 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 2) %>% pull(MAX)
+      min3 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 3) %>% pull(MIN)
+      max3 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 3) %>% pull(MAX)
+      
+      # Categorize safely
+      case_when(
+        !is.na(max1) && POP_DELKYJEDINCINUM <= max1 ~ 1L,
+        !is.na(min2) && !is.na(max2) && between(POP_DELKYJEDINCINUM, min2, max2) ~ 2L,
+        !is.na(min3) && POP_DELKYJEDINCINUM >= min3 ~ 3L,
+        TRUE ~ NA_integer_
+      )
     }
-  ) %>%
+    ) %>%
   dplyr::distinct() 
 
 # LOK_SPOLECNE ----
