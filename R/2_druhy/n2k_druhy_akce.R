@@ -501,25 +501,25 @@ n2k_druhy_pre <- n2k_export %>%
       POP_DELKYJEDINCI
       )
     ) %>%
-  dplyr::rowwise() %>%
-  dplyr::mutate(
-    POP_DELKYJEDINCIKAT = {
-      # Get thresholds for this row's DRUH
-      min1 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 1) %>% pull(MIN)
-      max1 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 1) %>% pull(MAX)
-      min2 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 2) %>% pull(MIN)
-      max2 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 2) %>% pull(MAX)
-      min3 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 3) %>% pull(MIN)
-      max3 <- cis_ryby_delky %>% filter(DRUH == DRUH, KAT == 3) %>% pull(MAX)
-      
-      # Categorize safely
-      case_when(
-        !is.na(max1) && POP_DELKYJEDINCINUM <= max1 ~ 1L,
-        !is.na(min2) && !is.na(max2) && between(POP_DELKYJEDINCINUM, min2, max2) ~ 2L,
-        !is.na(min3) && POP_DELKYJEDINCINUM >= min3 ~ 3L,
-        TRUE ~ NA_integer_
-      )
-    }
+  fuzzyjoin::fuzzy_left_join(
+    .,
+    cis_ryby_delky,
+    by = c(
+      "DRUH" = "DRUH",                  # exact
+      "POP_DELKYJEDINCINUM" = "MIN",    # >=
+      "POP_DELKYJEDINCINUM" = "MAX"     # <=
+    ),
+    match_fun = list(`==`, `>=`, `<=`)
+  ) %>%
+  # drop only the lookup columns, keep original POP_DELKYJEDINCI
+  dplyr::select(
+    -DRUH.y,
+    -MIN, 
+    -MAX
+    ) %>%
+  rename(
+    DRUH = DRUH.x,
+    POP_DELKYJEDINCIKAT = KAT
     ) %>%
   dplyr::distinct() 
 
