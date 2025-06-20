@@ -31,6 +31,11 @@ if(!isTRUE(require(openxlsx, quietly = TRUE))) {
 } else {
   require(openxlsx)}
 
+if(!isTRUE(require(fuzzyjoin, quietly = TRUE))) {
+  install.packages("fuzzyjoin", dependencies = TRUE); library(fuzzyjoin)
+} else {
+  require(fuzzyjoin)}
+
 if(!isTRUE(require(remotes, quietly = TRUE))) {
   install.packages("remotes", dependencies = TRUE); library(remotes)
 } else {
