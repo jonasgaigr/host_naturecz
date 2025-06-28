@@ -108,34 +108,35 @@ n2k_druhy_pre <- n2k_export %>%
                                  POP_PRESENCE == "ano" & POCITANO %in% limity$JEDNOTKA[limity$ID_IND == "POP_REPRO" & limity$druh == DRUH] ~ "ano",
                                  POP_PRESENCE == "ano" & POCITANO %in% !limity$JEDNOTKA[limity$ID_IND == "POP_REPRO" & limity$druh == DRUH] ~ "ano",
                                  TRUE ~ NA_character_),
-    POP_POCETNOST = dplyr::case_when(POP_PRESENCE == 0 ~ 0,
-                                     POP_POCET > 1000000 ~ 8,
-                                     REL_POC == "100 001-1 000 000" ~ 8,
-                                     POP_POCET > 100000 ~ 7,
-                                     REL_POC == "10 001-100 000" ~ 7,
-                                     POP_POCET > 10000 ~ 6,
-                                     REL_POC == "1001-10 000" ~ 6,
-                                     POP_POCET > 1000 ~ 5,
-                                     REL_POC == "řádově tisíce" ~ 5,
-                                     REL_POC == "1001-10 000" ~ 5,
-                                     grepl("počet samců: řádově tisíce", POZN_TAX) ~ 5,
-                                     POP_POCET > 100 & POP_POCET <= 1000 ~ 4,
-                                     REL_POC == "řádově stovky" ~ 4,
-                                     REL_POC == "101-1000" ~ 4,
-                                     grepl("počet samců: řádově stovky", POZN_TAX) ~ 4,
-                                     REL_POC == "cca 100" ~ 4,    
-                                     grepl("počet samců: cca 100", POZN_TAX) ~ 4,
-                                     grepl("počet samců: řádově vyšší desítky", POZN_TAX) ~ 3,
-                                     REL_POC == "řádově vyšší desítky" ~ 3,
-                                     POP_POCET > 51 & POP_POCET <= 100 ~ 3,
-                                     REL_POC == "řádově nižší desítky" ~ 2,
-                                     grepl("počet samců: řádově nižší desítky", POZN_TAX) ~ 2,
-                                     REL_POC == "11-100" ~ 3,
-                                     POP_POCET > 10 & POP_POCET < 50 ~ 2,
-                                     POP_POCET > 0 & POP_POCET <= 10 ~ 1,
-                                     REL_POC == "do 10" ~ 1,
-                                     REL_POC == "1-10" ~ 1,
-                                     grepl("počet samců: do 10", POZN_TAX) ~ 1),
+    POP_POCETNOSTNAL = dplyr::case_when(
+      POP_PRESENCE == 0 ~ 0,
+      POP_POCET > 1000000 ~ 8,
+      REL_POC == "100 001-1 000 000" ~ 8,
+      POP_POCET > 100000 ~ 7,
+      REL_POC == "10 001-100 000" ~ 7,
+      POP_POCET > 10000 ~ 6,
+      REL_POC == "1001-10 000" ~ 6,
+      POP_POCET > 1000 ~ 5,
+      REL_POC == "řádově tisíce" ~ 5,
+      REL_POC == "1001-10 000" ~ 5,
+      grepl("počet samců: řádově tisíce", POZN_TAX) ~ 5,
+      POP_POCET > 100 & POP_POCET <= 1000 ~ 4,
+      REL_POC == "řádově stovky" ~ 4,
+      REL_POC == "101-1000" ~ 4,
+      grepl("počet samců: řádově stovky", POZN_TAX) ~ 4,
+      REL_POC == "cca 100" ~ 4,    
+      grepl("počet samců: cca 100", POZN_TAX) ~ 4,
+      grepl("počet samců: řádově vyšší desítky", POZN_TAX) ~ 3,
+      REL_POC == "řádově vyšší desítky" ~ 3,
+      POP_POCET > 51 & POP_POCET <= 100 ~ 3,
+      REL_POC == "řádově nižší desítky" ~ 2,
+      grepl("počet samců: řádově nižší desítky", POZN_TAX) ~ 2,
+      REL_POC == "11-100" ~ 3,
+      POP_POCET > 10 & POP_POCET < 50 ~ 2,
+      POP_POCET > 0 & POP_POCET <= 10 ~ 1,
+      REL_POC == "do 10" ~ 1,
+      REL_POC == "1-10" ~ 1,
+      grepl("počet samců: do 10", POZN_TAX) ~ 1),
     POP_PASTIPOCET = readr::parse_number(
       stringr::str_extract(
         STRUKT_POZN, 
@@ -406,19 +407,19 @@ n2k_druhy_pre <- n2k_export %>%
   dplyr::mutate(
     POP_POCETMIN = dplyr::case_when(
       is.na(POP_POCET) == FALSE ~ POP_POCET,
-      POP_POCETNOST == 5 ~ 1001,
-      POP_POCETNOST == 4 ~ 100,
-      POP_POCETNOST == 3 ~ 10000,
-      POP_POCETNOST == 2 ~ 10000,
-      POP_POCETNOST == 1 ~ 10000
+      POP_POCETNOSTNAL == 5 ~ 1001,
+      POP_POCETNOSTNAL == 4 ~ 100,
+      POP_POCETNOSTNAL == 3 ~ 10000,
+      POP_POCETNOSTNAL == 2 ~ 10000,
+      POP_POCETNOSTNAL == 1 ~ 10000
       ),
     POP_POCETMAX = dplyr::case_when(
       is.na(POP_POCET) == FALSE ~ POP_POCET,
-      POP_POCETNOST == 5 ~ 10000,
-      POP_POCETNOST == 4 ~ 1000,
-      POP_POCETNOST == 3 ~ 10000,
-      POP_POCETNOST == 2 ~ 10000,
-      POP_POCETNOST == 1 ~ 10000
+      POP_POCETNOSTNAL == 5 ~ 10000,
+      POP_POCETNOSTNAL == 4 ~ 1000,
+      POP_POCETNOSTNAL == 3 ~ 10000,
+      POP_POCETNOSTNAL == 2 ~ 10000,
+      POP_POCETNOSTNAL == 1 ~ 10000
       ),
     POP_POCETLODYHSUM = sum(
       POP_POCETLODYH, 
@@ -523,11 +524,15 @@ n2k_druhy_pre <- n2k_export %>%
     ) %>%
   dplyr::distinct() 
 
-# LOK_SPOLECNE ----
+## LOK_SPOLECNE ----
 n2k_druhy_lokpop <- n2k_druhy_pre %>%
   #dplyr::filter(SKUPINA %in% c("Cévnaté rostliny", "Obojživelníci")) %>%
   dplyr::select(-c(ZDROJ:PRESNOST), SKUPINA) %>%
-  dplyr::group_by(KOD_LOKAL, ROK, DRUH) %>%
+  dplyr::group_by(
+    KOD_LOKAL, 
+    ROK, 
+    DRUH
+    ) %>%
   dplyr::reframe(
     CELKOVE = NA,
     POP_POCETSUMLOKAL = sum(POP_POCET, na.rm = TRUE),
@@ -535,7 +540,7 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
     POP_POCETMAX = max(POP_POCET, na.rm = TRUE), 
     POP_POCETMAX = ifelse(is.infinite(POP_POCETMAX), 0, POP_POCETMAX),
     POP_POCETNOST = max(
-      POP_POCETNOST,
+      POP_POCETNOSTNAL,
       na.rm = TRUE
     ),
     POP_POCETNOSTMAX = NA,
@@ -545,11 +550,10 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
     # LOK_OSTATNIBEZ ----
     # LOK_OBOJZIVELNICI ----
     # LOK_RYBY ----
-    POP_VITALITA = unique(
-      POP_DELKYJEDINCIKAT
-    ) %>%
-      na.omit() %>%
-      length(),
+    POP_VITALITA = dplyr::n_distinct(
+      POP_DELKYJEDINCIKAT, 
+      na.rm = TRUE
+      ),
     # LOK_SAVCI ----
     POP_POCETZIM = max(POP_POCET[(ROK == current_year & MESIC < 5) |
                                    (ROK == current_year - 1 & MESIC > 9)], 
@@ -619,7 +623,8 @@ n2k_druhy_lokpop_trend <- n2k_druhy_lokpop %>%
       ),
     POP_TRENDLM = coef(
       lm(
-        POP_POCETMAX ~ ROK))[2],
+        POP_POCETMAX ~ ROK)
+      )[2],
     POP_POCETNOSTMAX = max(
       POP_POCETNOST, 
       na.rm = TRUE
@@ -666,11 +671,14 @@ n2k_druhy <- n2k_druhy_pre %>%
                    by = join_by(KOD_LOKAL, DRUH)) %>%
   dplyr::distinct() 
 
-# ODSTRANENI PRIPRAVNYCH OBJEKTU Z PAMETI
+#--------------------------------------------------#
+## Odstraneni dilcich objektu z pameti ----- 
+#--------------------------------------------------#
 rm(n2k_druhy_pre, n2k_druhy_lokpop, n2k_druhy_lokpop_trend)
 
-
-# PREVEDENI NA LONG FORMAT A  NAPOJENI NA LIMITY ----
+#----------------------------------------------------------#
+# Prevod na long format a napojeni na limity ----- 
+#----------------------------------------------------------#
 n2k_druhy_long <- n2k_druhy %>%
   dplyr::mutate(across(.cols = ncol_orig:ncol(.), .fns = ~ as.character(.))) %>%
   tidyr::pivot_longer(.,
