@@ -623,7 +623,7 @@ chu_export <-
     
     write.table(
       n2k_druhy_chu,
-      paste0("C:/Users/jonas.gaigr/Documents/state_results/n2k_druhy_chu",
+      paste0("Outputs/Data/",
              "_",
              current_year,
              "_",
@@ -644,7 +644,7 @@ chu_export <-
     
     write.table(
       n2k_druhy_chu,
-      paste0("C:/Users/jonas.gaigr/Documents/state_results/n2k_druhy_chu",
+      paste0("Outputs/Data/",
              "_",
              current_year,
              "_",
