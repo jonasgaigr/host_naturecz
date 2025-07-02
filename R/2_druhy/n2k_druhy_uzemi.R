@@ -513,15 +513,22 @@ n2k_druhy_chu <-
         SITECODE,
         NAZEV
         ),
-      by = c("kod_chu" = "SITECODE")) %>%
+      by = c(
+        "kod_chu" = "SITECODE"
+        )
+    ) %>%
   dplyr::left_join(.,
                    rp_code,
-                   by = join_by("kod_chu")) %>%
-  # dplyr::right_join() zajistuje export hodnoceni pouze pro predmety ochrany
-  dplyr::right_join(
+                   by = join_by(
+                     "kod_chu"
+                     )
+                   ) %>%
+  dplyr::left_join(
     ., 
     n2k_oop,
-    by = c("kod_chu" = "SITECODE")
+    by = c(
+      "kod_chu" = "SITECODE"
+      )
     ) %>%
   dplyr::mutate(
     typ_predmetu_hodnoceni = "Druh",
@@ -544,11 +551,23 @@ n2k_druhy_chu <-
     stav = STAV_IND
     ) %>%
   dplyr::select(
-    typ_predmetu_hodnoceni, kod_chu, nazev_chu, 
-    druh, feature_code, 
-    hodnocene_obdobi_od, hodnocene_obdobi_do, oop, parametr_nazev, 
-    parametr_hodnota, parametr_limit, parametr_jednotka, 
-    stav, trend, datum_hodnoceni, pracoviste, ID_ND_AKCE
+    typ_predmetu_hodnoceni, 
+    kod_chu, 
+    nazev_chu, 
+    druh, 
+    feature_code, 
+    hodnocene_obdobi_od, 
+    hodnocene_obdobi_do, 
+    oop, 
+    parametr_nazev, 
+    parametr_hodnota, 
+    parametr_limit, 
+    parametr_jednotka, 
+    stav, 
+    trend, 
+    datum_hodnoceni, 
+    pracoviste, 
+    ID_ND_AKCE
   ) %>%
   dplyr::left_join(
     ., 
@@ -564,6 +583,19 @@ n2k_druhy_chu <-
       ),
     metodika = 15087
   ) %>%
+  # navazani pouze na predmety ochrany, dropnuti nepredmetu
+  dplyr::right_join(
+    .,
+    sites_subjects %>%
+      dplyr::select(
+        site_code,
+        nazev_lat
+      ),
+    by = c(
+      "kod_chu" = "site_code",
+      "druh" = "nazev_lat"
+    )
+  )
   dplyr::select(
     -c(
       ind_id,
