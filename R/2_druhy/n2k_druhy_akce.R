@@ -787,7 +787,7 @@ ncol_druhy_lim <-
 # Zapis dat -----
 #----------------------------------------------------------#
 
-akce_export <-
+nal_export <-
   function() {
     
     n2k_druhy_lim_write <-
@@ -828,6 +828,7 @@ akce_export <-
     write.table(
       n2k_druhy_lim_write,
       paste0("Outputs/Data/",
+             "n2k_druhy_nal",
              "_",
              current_year,
              "_",
@@ -849,6 +850,7 @@ akce_export <-
     write.table(
       n2k_druhy_lim_write,
       paste0("Outputs/Data/",
+             "n2k_druhy_nal",
              "_",
              current_year,
              "_",
@@ -869,7 +871,7 @@ akce_export <-
     
   }
 
-akce_export()
+nal_export()
 
 #----------------------------------------------------------#
 # KONEC ----

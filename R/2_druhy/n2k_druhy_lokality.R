@@ -257,6 +257,7 @@ lok_export <-
       n2k_druhy_lok_write,
       paste0(
         "Outputs/Data/",
+        "n2k_druhy_lok",
         "_",
         current_year,
         "_",
@@ -279,6 +280,7 @@ lok_export <-
       n2k_druhy_lok_write,
       paste0(
         "Outputs/Data/",
+        "n2k_druhy_lok",
         "_",
         current_year,
         "_",
