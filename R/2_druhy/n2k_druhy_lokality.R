@@ -177,65 +177,130 @@ n2k_druhy_lok_idakce <-
     KOD_LOKAL
     ) %>%
   dplyr::arrange(
-    desc(CILMON),
-    desc(ROK), 
-    desc(CELKOVE), 
-    desc(DATUM)
+    dplyr::desc(
+      CILMON
+      ),
+    dplyr::desc(
+      ROK
+      ), 
+    dplyr::desc(
+      CELKOVE
+      ), 
+    dplyr::desc(
+      DATUM
+      )
     ) %>%
   dplyr::slice(1) %>%
   dplyr::ungroup() %>%
   dplyr::pull(ID_ND_AKCE)
 
-# FILTR NALEZU PODLE VYBRANEHO ID AKCE (LOKALITA) ----
+#----------------------------------------------------------#
+# Filtr lokalit podle vybraneho ID_AKCE -----
+#----------------------------------------------------------#
 n2k_druhy_lokeval <- n2k_druhy_lok %>%
   dplyr::filter(
     ID_ND_AKCE %in% n2k_druhy_pole1_idakce
     ) %>%
   dplyr::ungroup()
 
-write_lok <- write.csv(
-  n2k_druhy_lokeval %>%
-    dplyr::left_join(
-      ., 
-      evl %>%
-        sf::st_drop_geometry() %>%
-        dplyr::select(
-          SITECODE, 
-          NAZEV
-          ),
-      by = c(
-        "kod_chu" = "SITECODE"
-        )
-      ) %>%
-    dplyr::left_join(
-      ., 
-      n2k_druhy_obdobi_chu,
-      by = join_by(
-        "kod_chu", 
-        "DRUH"
-        )
-      ) %>%
-    dplyr::left_join(
-      .,
-      rp_code,
-      by = join_by(
-        "kod_chu"
-        )
-      ) %>%
-    dplyr::left_join(
-      .,
-      n2k_oop,
-      by = c("kod_chu" = "SITECODE")
-      ),
-  paste0(
-    "C:/Users/jonas.gaigr/Documents/state_results/n2k_druhy_lok_",
-    toString(Sys.Date()),
-    ".csv"
-    ),
-  row.names = TRUE,
-  fileEncoding = "Windows-1250")
+#----------------------------------------------------------#
+# Zapis dat -----
+#----------------------------------------------------------#
 
-write_lok
+lok_export <-
+  function() {
+    
+    n2k_druhy_lok_write <-
+      n2k_druhy_lokeval %>%
+      dplyr::left_join(
+        ., 
+        evl %>%
+          sf::st_drop_geometry() %>%
+          dplyr::select(
+            SITECODE, 
+            NAZEV
+          ),
+        by = c(
+          "kod_chu" = "SITECODE"
+        )
+      ) %>%
+      dplyr::left_join(
+        ., 
+        n2k_druhy_obdobi_lok,
+        by = join_by(
+          "kod_chu", 
+          "DRUH"
+        )
+      ) %>%
+      dplyr::left_join(
+        .,
+        rp_code,
+        by = join_by(
+          "kod_chu"
+        )
+      ) %>%
+      dplyr::left_join(
+        .,
+        n2k_oop,
+        by = c("kod_chu" = "SITECODE")
+      )
+    
+    sep_isop <- ";"
+    quote_env_isop <- FALSE
+    encoding_isop <- "UTF-8"
+    
+    sep <- ","
+    quote_env <- TRUE
+    encoding <- "Windows-1250"
+    
+    write.table(
+      n2k_druhy_lok_write,
+      paste0(
+        "/Outputs/Data",
+        "_",
+        current_year,
+        "_",
+        gsub(
+          "-", 
+          "", 
+          Sys.Date()
+          ),
+        "_",
+        encoding,
+        ".csv"
+      ),
+      row.names = FALSE,
+      sep = sep,
+      quote = quote_env,
+      fileEncoding = encoding
+    )  
+    
+    write.table(
+      n2k_druhy_lok_write,
+      paste0(
+        "/Outputs/Data",
+        "_",
+        current_year,
+        "_",
+        gsub(
+          "-", 
+          "", 
+          Sys.Date()
+          ),
+        "_",
+        encoding_isop,
+        ".csv"
+      ),
+      row.names = FALSE,
+      sep = sep_isop,
+      quote = quote_env_isop,
+      fileEncoding = encoding_isop
+    )  
+    
+  }
+
+lok_export()
+
 
 #----------------------------------------------------------#
 # KONEC ----
