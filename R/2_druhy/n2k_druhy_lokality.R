@@ -1,4 +1,6 @@
-# LOKALITA LIMITY - PRIPRAVA ----
+#----------------------------------------------------------#
+# Priprava agregovanych indikatoru ----
+#----------------------------------------------------------#
 n2k_druhy_lok_pre <- 
   n2k_druhy_lim %>%
   dplyr::group_by(
@@ -52,7 +54,9 @@ n2k_druhy_lok_pre <-
   dplyr::ungroup() %>%
   dplyr::distinct()
 
-# LOKALITA LIMITY ----
+#----------------------------------------------------------#
+# Napojeni na limity ----
+#----------------------------------------------------------#
 n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   dplyr::group_by(
     kod_chu, 
@@ -88,24 +92,24 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
         na.omit() %>%
       length(),
     LENIND_SUMKLIC = unique(
-                    limity$ID_IND[limity$DRUH %in% DRUH & 
-                                    limity$KLIC == "ano" &
-                                    limity$UROVEN %in% c("lok") &
-                                    is.na(limity$LIM_IND) == FALSE],
+      limity$ID_IND[limity$DRUH %in% DRUH & 
+                      limity$KLIC == "ano" &
+                      limity$UROVEN %in% c("lok") &
+                      is.na(limity$LIM_IND) == FALSE],
                     na.rm = TRUE
-                    ) %>%
-                    na.omit() %>%
-    length(),
-                LENIND_SUMOST = length(
-                  unique(
-                    limity$ID_IND[limity$DRUH %in% DRUH &
-                                    limity$KLIC == "ne" &
-                                    limity$UROVEN %in% c("lok") &
-                                    is.na(limity$LIM_IND) == FALSE],
-                    na.rm = TRUE) %>% 
-                    na.omit()
-                  )
-                ) %>%
+      ) %>%
+      na.omit() %>%
+      length(),
+    LENIND_SUMOST = unique(
+      limity$ID_IND[limity$DRUH %in% DRUH &
+                        limity$KLIC == "ne" &
+                        limity$UROVEN %in% c("lok") &
+                        is.na(limity$LIM_IND) == FALSE],
+        na.rm = TRUE
+        ) %>% 
+        na.omit() %>%
+      length()
+    ) %>%
   # pokud sumklic spatny tak spatny, pokud sum ost tak spatny, pokud sumost tak zhorseny, pokud nic z toho tak dobry, TRUE ~ neznamy pres napojeni na limity
   dplyr::mutate(
     CELKOVE = dplyr::case_when(
@@ -143,7 +147,9 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   dplyr::distinct() %>%
   dplyr::arrange(ID_ND_AKCE)
 
-# VYBER ID AKCE REPREZENTUJICI SITMAP_1RAD ----
+#----------------------------------------------------------#
+# Vyber ID_AKCE reprezentujici SITMAP_1RAD ----
+#----------------------------------------------------------#
 n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   dplyr::group_by(
     kod_chu, 
@@ -160,7 +166,9 @@ n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   dplyr::ungroup() %>%
   dplyr::pull(ID_ND_AKCE)
 
-# FILTR NALEZU PODLE VYBRANEHO ID AKCE (POLE) ----
+#----------------------------------------------------------#
+# Filtr podle POLE ----
+#----------------------------------------------------------#
 n2k_druhy_pole1eval <- 
   n2k_druhy_lok %>%
   dplyr::filter(
@@ -168,6 +176,9 @@ n2k_druhy_pole1eval <-
     ) %>%
   dplyr::ungroup()
 
+#----------------------------------------------------------#
+# Napojeni na limity ----
+#----------------------------------------------------------#
 # VYBER ID AKCE REPREZENTUJICI LOKALITU ----
 n2k_druhy_lok_idakce <- 
   n2k_druhy_lok %>%
@@ -228,8 +239,10 @@ lok_export <-
         ., 
         n2k_druhy_obdobi_lok,
         by = join_by(
-          "kod_chu", 
-          "DRUH"
+          "kod_chu",
+          "KOD_LOKAL",
+          "POLE",
+          "DRUH",
         )
       ) %>%
       dplyr::left_join(
