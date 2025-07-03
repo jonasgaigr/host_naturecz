@@ -12,9 +12,19 @@ n2k_druhy_lok_pre <-
     ID_IND
     ) %>%
   dplyr::reframe(
-    SKUPINA = unique(SKUPINA),
-    NAZEV_LOK = toString(unique(LOKALITA)),
-    ID_ND_AKCE = toString(unique(IDX_ND_AKCE)),
+    SKUPINA = unique(
+      SKUPINA
+      ),
+    NAZEV_LOK = toString(
+      unique(
+        LOKALITA
+        )
+      ),
+    ID_ND_AKCE = toString(
+      unique(
+        IDX_ND_AKCE
+        )
+      ),
     DATUM = max(
       DATUM, 
       na.rm = TRUE
@@ -50,7 +60,14 @@ n2k_druhy_lok_pre <-
       na.rm = TRUE
       )
   ) %>%
-  dplyr::mutate_all(~ ifelse(is.infinite(.), NA, .)) %>% 
+  dplyr::mutate_all(
+    ~ ifelse(
+      is.infinite(
+        .
+        ),
+      NA,
+      .)
+    ) %>% 
   dplyr::ungroup() %>%
   dplyr::distinct()
 
@@ -177,9 +194,8 @@ n2k_druhy_pole1eval <-
   dplyr::ungroup()
 
 #----------------------------------------------------------#
-# Napojeni na limity ----
+# Vyber posledniho ID_AKCE za lokalitu ----
 #----------------------------------------------------------#
-# VYBER ID AKCE REPREZENTUJICI LOKALITU ----
 n2k_druhy_lok_idakce <- 
   n2k_druhy_lok %>%
   dplyr::group_by(
