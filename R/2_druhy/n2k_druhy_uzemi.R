@@ -155,7 +155,6 @@ n2k_druhy_chu_lok <-
         ), 
       na.rm = TRUE),
     POP_PROCDOB = POP_POCETDOB/POP_POCETSUM*100,
-    ## SAVCI ----
     POP_POCETZIM = sum(
       case_when(
         ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
@@ -313,24 +312,7 @@ n2k_druhy_chu_komb_long <-
       TRUE ~ KLIC
     )
   ) %>%
-  dplyr::distinct(
-    kod_chu, 
-    DRUH, 
-    ROK, 
-    ID_ND_AKCE, 
-    POLE, 
-    NAZEV_LOK, 
-    CILMON_CHU
-  ) %>%
-  dplyr::mutate(
-    ID_IND = "CELKOVE_HODNOCENI",
-    HOD_IND = NA_character_,
-    STAV_IND = NA_real_,
-    TYP_IND = NA_character_,
-    LIM_IND = NA_character_,
-    IND_GRP = NA_character_,
-    KLIC = NA_character_
-  ) %>%
+  dplyr::distinct() %>%
   # Teď odstraníme všechny sloupce, co začínají na '...'
   dplyr::select(
     -dplyr::starts_with(
@@ -344,7 +326,7 @@ n2k_druhy_chu_komb_long <-
 # Konsolidace uzemi -----
 #----------------------------------------------------------#
 n2k_druhy_chu <- 
-  n2k_druhy_chu_lok_long %>%
+  n2k_druhy_chu_komb_long %>%
   dplyr::group_by(
     kod_chu, 
     DRUH, 
