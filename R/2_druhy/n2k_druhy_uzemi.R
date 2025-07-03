@@ -619,10 +619,12 @@ n2k_druhy_chu <-
 chu_export <-
   function() {
     
+    # oddelovace a enkodovani pro import do ISOP
     sep_isop <- ";"
     quote_env_isop <- FALSE
     encoding_isop <- "UTF-8"
     
+    # oddelovace a enkodovani pro import do MS Excel
     sep <- ","
     quote_env <- TRUE
     encoding <- "Windows-1250"
