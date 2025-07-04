@@ -107,7 +107,6 @@ n2k_druhy_chu_lok <-
     DRUH
     ) %>%
   dplyr::reframe(
-    ## SPOLECNE ----
     ROK = toString(unique(ROK)),
     POLE = toString(unique(POLE)),
     NAZEV_LOK = toString(unique(NAZEV_LOK)),
@@ -154,7 +153,11 @@ n2k_druhy_chu_lok <-
         TRUE ~ 0
         ), 
       na.rm = TRUE),
-    POP_PROCDOB = POP_POCETDOB/POP_POCETSUM*100,
+    POP_PROCDOB = dplyr::case_when(
+      is.na(POP_POCETDOB) | is.na(POP_POCETSUM) ~ NA_real_,
+      POP_POCETSUM == 0 ~ 0,
+      TRUE ~ round(POP_POCETDOB / POP_POCETSUM * 100, 3)
+    ),
     POP_POCETZIM = sum(
       case_when(
         ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
@@ -190,7 +193,10 @@ n2k_druhy_chu_lok <-
     POP_VITALZIM = ifelse(
       POP_POCETZIMREF == 0, 
       NA_real_, 
-      POP_POCETZIM / POP_POCETZIMREF
+      round(
+        POP_POCETZIM/POP_POCETZIMREF,
+        3
+        )
       ),
     POP_POCETLETS1 = sum(
       case_when(
@@ -236,8 +242,36 @@ n2k_druhy_chu_lok <-
       POP_POCETLET2, 
       POP_POCETLET3, 
       na.rm = TRUE),
-    POP_VITALLET = POP_POCETLET/POP_POCETLETREF,
-    POP_REPROCHI = POP_POCETLETS2/POP_POCETLETS1,
+    POP_VITALLET = round(
+      POP_POCETLET/POP_POCETLETREF,
+      3
+    ),
+    POP_REPROCHI = round(
+      POP_POCETLETS2/POP_POCETLETS1,
+      3
+    ),
+    LOK_POCETSUM = sum(
+      dplyr::case_when(
+        ID_IND == "CELKOVE_HODNOCENI" & 
+          CILMON == 1 
+        ~ as.numeric(HOD_IND),
+        TRUE ~ NA
+        )
+      ),
+    LOK_POCETDOB = sum(
+      dplyr::case_when(
+        ID_IND == "CELKOVE_HODNOCENI" & 
+          CELKOVE == 1 & 
+          CILMON == 1 &
+          HOD_IND %in% c(1, "1") ~ as.numeric(HOD_IND), 
+        TRUE ~ 0
+      ), 
+      na.rm = TRUE),
+    LOK_PROCDOBR = dplyr::case_when(
+      is.na(LOK_POCETDOB) | is.na(LOK_POCETSUM) ~ NA_real_,
+      LOK_POCETSUM == 0 ~ 0,
+      TRUE ~ round(LOK_POCETDOB / LOK_POCETSUM * 100, 3)
+    )
   )
 
 #--------------------------------------------------#
@@ -383,7 +417,11 @@ n2k_druhy_chu <-
   dplyr::ungroup() %>%
   dplyr::left_join(., 
                    n2k_druhy_obdobi_chu,
-                   by = join_by("kod_chu", "DRUH")) %>%
+                   by = join_by(
+                     "kod_chu",
+                     "DRUH"
+                     )
+                   ) %>%
   dplyr::mutate(
     STAV_IND = ifelse(
       is.infinite(STAV_IND),
@@ -449,8 +487,8 @@ n2k_druhy_chu <-
     ) %>%
   dplyr::mutate(
     STAV_IND = dplyr::case_when(
-      ID_IND == "CELKOVE_HODNOCENI" ~ as.character(CELKOVE),
-      TRUE ~ as.character(STAV_IND)
+      ID_IND == "CELKOVE_HODNOCENI" ~ CELKOVE,
+      TRUE ~ STAV_IND
       )
     ) %>%
   dplyr::mutate(
