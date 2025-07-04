@@ -279,23 +279,38 @@ n2k_druhy_chu_lok <-
 #--------------------------------------------------#
 # Prevod pole1 na long format
 n2k_druhy_chu_pole1_long <- n2k_druhy_chu_pole1 %>%
-  dplyr::mutate(across(7:ncol(.) - 2, as.character)) %>%
+  dplyr::mutate(
+    across(
+      7:ncol(.) - 2,
+      as.character
+      )
+    ) %>%
   tidyr::pivot_longer(
     cols = 8:ncol(.),
     names_to = "ID_IND",
     values_to = "HOD_IND"
   ) %>%
-  dplyr::mutate(HOD_IND = as.character(HOD_IND))
+  dplyr::mutate(
+    HOD_IND = as.character(HOD_IND)
+    )
 
 # Convert lok na long format
 n2k_druhy_chu_lok_long <- n2k_druhy_chu_lok %>%
-  dplyr::mutate(across(7:ncol(.), as.character)) %>%
+  dplyr::mutate(
+    across(
+      7:ncol(.)
+      , 
+      as.character
+      )
+    ) %>%
   tidyr::pivot_longer(
     cols = 8:ncol(.),
     names_to = "ID_IND",
     values_to = "HOD_IND"
   ) %>%
-  dplyr::mutate(HOD_IND = as.character(HOD_IND))
+  dplyr::mutate(
+    HOD_IND = as.character(HOD_IND)
+    )
 
 # Combine the long format datasets
 n2k_druhy_chu_komb_long <- 
