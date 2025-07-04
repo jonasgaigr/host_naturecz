@@ -83,24 +83,31 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
     ) %>%
   dplyr::mutate(
     IND_SUM = sum(
-      as.numeric(STAV_IND),
+      as.numeric(
+        STAV_IND[limity$UROVEN %in% c("lok") &
+                   is.na(LIM_IND) == FALSE]
+      ),
       na.rm = TRUE
       ) %>%
       as.character(),
     IND_SUMKLIC = sum(
-      as.numeric(STAV_IND[KLIC == "ano" &
+      as.numeric(
+        STAV_IND[KLIC == "ano" &
+                            limity$UROVEN %in% c("lok") &
                             is.na(LIM_IND) == FALSE]),
       na.rm = TRUE
       ) %>%
       as.character(),
     IND_SUMOST = sum(
-      as.numeric(STAV_IND[KLIC == "ne" &
-                            is.na(LIM_IND) == FALSE]), 
+      as.numeric(
+        STAV_IND[KLIC == "ne" &
+                   limity$UROVEN %in% c("lok") &
+                   is.na(LIM_IND) == FALSE]
+        ), 
       na.rm = TRUE
       ) %>%
       as.character(),
-    LENIND_SUM = 
-      unique(
+    IND_LEN = unique(
         limity$ID_IND[limity$DRUH %in% DRUH &
                         limity$UROVEN %in% c("lok") &
                         is.na(limity$LIM_IND) == FALSE],
@@ -108,7 +115,7 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
         ) %>% 
         na.omit() %>%
       length(),
-    LENIND_SUMKLIC = unique(
+    IND_LENKLIC = unique(
       limity$ID_IND[limity$DRUH %in% DRUH & 
                       limity$KLIC == "ano" &
                       limity$UROVEN %in% c("lok") &
@@ -117,7 +124,7 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
       ) %>%
       na.omit() %>%
       length(),
-    LENIND_SUMOST = unique(
+    IND_LENOST = unique(
       limity$ID_IND[limity$DRUH %in% DRUH &
                         limity$KLIC == "ne" &
                         limity$UROVEN %in% c("lok") &
@@ -131,11 +138,11 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   dplyr::mutate(
     CELKOVE = dplyr::case_when(
       is.na(CILMON) == TRUE ~ NA_real_,
-      unique(IND_SUMKLIC) < LENIND_SUMKLIC ~ 0,
-      unique(IND_SUMOST) < (LENIND_SUMOST - 2) ~ 0,
-      unique(IND_SUMOST) < (LENIND_SUMOST - 1) ~ 0.5,
-      unique(IND_SUMKLIC) >= LENIND_SUMKLIC & 
-        unique(IND_SUMOST) > (LENIND_SUMOST - 1) ~ 1,
+      unique(IND_SUMKLIC) < IND_LENKLIC ~ 0,
+      unique(IND_SUMOST) < (IND_LENOST - 2) ~ 0,
+      unique(IND_SUMOST) < (IND_LENOST - 1) ~ 0.5,
+      unique(IND_SUMKLIC) >= IND_LENKLIC & 
+        unique(IND_SUMOST) > (IND_LENOST - 1) ~ 1,
       TRUE ~ NA_real_
       )
     ) %>%
