@@ -174,6 +174,18 @@ cis_evd_perioda <- readr::read_csv(
     )
 
 #--------------------------------------------------#
+## Ciselnik metodiky hodnoceni stavu ---- 
+#--------------------------------------------------#
+cis_metodika <- readr::read_csv(
+  "https://github.com/jonasgaigr/host_naturecz/raw/refs/heads/main/Data/Input/cis_metodika.csv", 
+  locale = readr::locale(encoding = "Windows-1250")
+) %>%
+  dplyr::select(
+    druh, 
+    metodika
+  )
+
+#--------------------------------------------------#
 ## Ciselnik kategorii delkovych struktur ryb a mihuli ---- 
 #--------------------------------------------------#
 cis_ryby_delky <- readr::read_csv(
