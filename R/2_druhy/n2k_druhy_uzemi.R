@@ -251,25 +251,16 @@ n2k_druhy_chu_lok <-
       3
     ),
     LOK_POCETSUM = sum(
-      dplyr::case_when(
-        ID_IND == "CELKOVE_HODNOCENI" & 
-          CILMON == 1 
-        ~ as.numeric(HOD_IND),
-        TRUE ~ NA
-        )
-      ),
+      ID_IND == "CELKOVE_HODNOCENI" & CILMON == 1,
+      na.rm = TRUE
+    ),
     LOK_POCETDOB = sum(
-      dplyr::case_when(
-        ID_IND == "CELKOVE_HODNOCENI" & 
-          CELKOVE == 1 & 
-          CILMON == 1 &
-          HOD_IND %in% c(1, "1") ~ as.numeric(HOD_IND), 
-        TRUE ~ 0
-      ), 
-      na.rm = TRUE),
+      ID_IND == "CELKOVE_HODNOCENI" & CILMON == 1 & HOD_IND == "dobrý",
+      na.rm = TRUE
+    ),
     LOK_PROCDOBR = dplyr::case_when(
       is.na(LOK_POCETDOB) | is.na(LOK_POCETSUM) ~ NA_real_,
-      LOK_POCETSUM == 0 ~ 0,
+      LOK_POCETSUM == 0 ~ NA_real_,
       TRUE ~ round(LOK_POCETDOB / LOK_POCETSUM * 100, 3)
     )
   )
