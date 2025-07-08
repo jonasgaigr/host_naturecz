@@ -3,6 +3,7 @@
 #----------------------------------------------------------#
 #--------------------------------------------------#
 ## Agregace po poli 1. radu -----
+# group_by UZEMI a DRUH
 #--------------------------------------------------#
 
 n2k_druhy_chu_pole1 <- 
@@ -13,10 +14,26 @@ n2k_druhy_chu_pole1 <-
     ) %>%
   #dplyr::filter(DATUM + years(6) >= current_year) %>%
   dplyr::reframe(
-    ROK = toString(unique(ROK)),
-    POLE = toString(unique(POLE)),
-    NAZEV_LOK = toString(unique(NAZEV_LOK)),
-    ID_ND_AKCE = toString(unique(ID_ND_AKCE)),
+    ROK = toString(
+      unique(
+        ROK
+        )
+      ),
+    POLE = toString(
+      unique(
+        POLE
+        )
+      ),
+    NAZEV_LOK = toString(
+      unique(
+        NAZEV_LOK
+        )
+      ),
+    ID_ND_AKCE = toString(
+      unique(
+        ID_ND_AKCE
+        )
+      ),
     CILMON_CHU = max(
       CILMON, 
       na.rm = TRUE
@@ -81,6 +98,7 @@ n2k_druhy_chu_pole1 <-
 
 #--------------------------------------------------#
 ## Agregace po lokalite -----
+# group_by UZEMI a DRUH
 #--------------------------------------------------#
 n2k_druhy_chu_lok <- 
   n2k_druhy_lokeval %>%
@@ -89,7 +107,6 @@ n2k_druhy_chu_lok <-
     DRUH
     ) %>%
   dplyr::reframe(
-    ## CHU_LOK_SPOLECNE ----
     ROK = toString(unique(ROK)),
     POLE = toString(unique(POLE)),
     NAZEV_LOK = toString(unique(NAZEV_LOK)),
@@ -136,12 +153,11 @@ n2k_druhy_chu_lok <-
         TRUE ~ 0
         ), 
       na.rm = TRUE),
-    POP_PROCDOB = POP_POCETDOB/POP_POCETSUM*100,
-    ## CHU_LOK_HMYZ ----
-    ## CHU_LOK_OSTATNIBEZ ----
-    ## CHU_LOK_OBOJZIVELNICI ----
-    ## CHU_LOK_RYBY ----
-    ## CHU_LOK_SAVCI ----
+    POP_PROCDOB = dplyr::case_when(
+      is.na(POP_POCETDOB) | is.na(POP_POCETSUM) ~ NA_real_,
+      POP_POCETSUM == 0 ~ 0,
+      TRUE ~ round(POP_POCETDOB / POP_POCETSUM * 100, 3)
+    ),
     POP_POCETZIM = sum(
       case_when(
         ID_IND == "POP_POCET" ~ as.numeric(HOD_IND), 
@@ -177,7 +193,10 @@ n2k_druhy_chu_lok <-
     POP_VITALZIM = ifelse(
       POP_POCETZIMREF == 0, 
       NA_real_, 
-      POP_POCETZIM / POP_POCETZIMREF
+      round(
+        POP_POCETZIM/POP_POCETZIMREF,
+        3
+        )
       ),
     POP_POCETLETS1 = sum(
       case_when(
@@ -223,60 +242,87 @@ n2k_druhy_chu_lok <-
       POP_POCETLET2, 
       POP_POCETLET3, 
       na.rm = TRUE),
-    POP_VITALLET = POP_POCETLET/POP_POCETLETREF,
-    POP_REPROCHI = POP_POCETLETS2/POP_POCETLETS1,
-    ## CHU_LOK_MECHOROSTY ----
-    
-    ## CHU_LOK_CEVNATE ----
-    
-    ## CHU_LOK_PTACI ----
-    
-
+    POP_VITALLET = round(
+      POP_POCETLET/POP_POCETLETREF,
+      3
+    ),
+    POP_REPROCHI = round(
+      POP_POCETLETS2/POP_POCETLETS1,
+      3
+    ),
+    LOK_POCETSUM = sum(
+      ID_IND == "CELKOVE_HODNOCENI" & CILMON == 1,
+      na.rm = TRUE
+    ),
+    LOK_POCETDOB = sum(
+      ID_IND == "CELKOVE_HODNOCENI" & CILMON == 1 & HOD_IND == "dobrý",
+      na.rm = TRUE
+    ),
+    LOK_PROCDOBR = dplyr::case_when(
+      is.na(LOK_POCETDOB) | is.na(LOK_POCETSUM) ~ NA_real_,
+      LOK_POCETSUM == 0 ~ NA_real_,
+      TRUE ~ round(LOK_POCETDOB / LOK_POCETSUM * 100, 3)
+    )
   )
-
-
 
 #--------------------------------------------------#
 ## Long format pripravneho objektu ---- 
 #--------------------------------------------------#
-
-n2k_druhy_chu_lok_long <- 
-  n2k_druhy_chu_lok %>%
+# Prevod pole1 na long format
+n2k_druhy_chu_pole1_long <- n2k_druhy_chu_pole1 %>%
   dplyr::mutate(
-    across(.cols = 7:ncol(.), 
-           .fns = ~ as.character(.)
-           )
+    across(
+      7:ncol(.) - 2,
+      as.character
+      )
     ) %>%
   tidyr::pivot_longer(
-    .,
-    cols = c(8:ncol(.)),
+    cols = 8:ncol(.),
     names_to = "ID_IND",
     values_to = "HOD_IND"
-    ) %>%
+  ) %>%
   dplyr::mutate(
     HOD_IND = as.character(HOD_IND)
+    )
+
+# Convert lok na long format
+n2k_druhy_chu_lok_long <- n2k_druhy_chu_lok %>%
+  dplyr::mutate(
+    across(
+      7:ncol(.)
+      , 
+      as.character
+      )
+    ) %>%
+  tidyr::pivot_longer(
+    cols = 8:ncol(.),
+    names_to = "ID_IND",
+    values_to = "HOD_IND"
+  ) %>%
+  dplyr::mutate(
+    HOD_IND = as.character(HOD_IND)
+    )
+
+# Combine the long format datasets
+n2k_druhy_chu_komb_long <- 
+  dplyr::bind_rows(
+    n2k_druhy_chu_pole1_long, 
+    n2k_druhy_chu_lok_long
     ) %>%
   dplyr::distinct() %>%
-  dplyr::bind_rows(
-    .,
-    n2k_druhy_chu_pole1
-    ) %>%
   dplyr::arrange(
     ID_ND_AKCE
-    ) %>%
+  ) %>%
   dplyr::right_join(
     .,
     limity %>%
       dplyr::filter(
         UROVEN == "chu"
-        ),
+      ),
     by = c(
       "DRUH" = "DRUH",
       "ID_IND" = "ID_IND"
-      )
-    ) %>%
-  dplyr::filter(
-    UROVEN == "chu"
+    )
   ) %>%
   dplyr::group_by(
     kod_chu,
@@ -286,9 +332,7 @@ n2k_druhy_chu_lok_long <-
   dplyr::arrange(
     HOD_IND
   ) %>%
-  dplyr::slice(
-    1
-    ) %>%
+  dplyr::slice(1) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(
     STAV_IND = dplyr::case_when(
@@ -306,39 +350,23 @@ n2k_druhy_chu_lok_long <-
     KLIC = dplyr::case_when(
       is.na(HOD_IND) == TRUE ~ "ne",
       TRUE ~ KLIC
-      )
-    ) 
-n2k_druhy_chu_lok_long <- 
-  n2k_druhy_chu_lok_long %>%
-  dplyr::bind_rows(
-    n2k_druhy_chu_lok_long %>%
-      dplyr::distinct(
-        kod_chu, 
-        DRUH, 
-        ROK, 
-        ID_ND_AKCE, 
-        POLE, 
-        NAZEV_LOK, 
-        CILMON_CHU
-        ) %>%
-      dplyr::mutate(
-        ID_IND = "CELKOVE_HODNOCENI",
-        HOD_IND = NA_character_,
-        STAV_IND = NA_real_,
-        TYP_IND = NA_character_,
-        LIM_IND = NA_character_,
-        IND_GRP = NA_character_,
-        KLIC = NA_character_
-      )
+    )
   ) %>%
+  dplyr::distinct() %>%
   # Teď odstraníme všechny sloupce, co začínají na '...'
-  dplyr::select(-dplyr::starts_with("..."))
+  dplyr::select(
+    -dplyr::starts_with(
+      "..."
+    )
+  )
+
+
 
 #----------------------------------------------------------#
 # Konsolidace uzemi -----
 #----------------------------------------------------------#
 n2k_druhy_chu <- 
-  n2k_druhy_chu_lok_long %>%
+  n2k_druhy_chu_komb_long %>%
   dplyr::group_by(
     kod_chu, 
     DRUH, 
@@ -395,7 +423,11 @@ n2k_druhy_chu <-
   dplyr::ungroup() %>%
   dplyr::left_join(., 
                    n2k_druhy_obdobi_chu,
-                   by = join_by("kod_chu", "DRUH")) %>%
+                   by = join_by(
+                     "kod_chu",
+                     "DRUH"
+                     )
+                   ) %>%
   dplyr::mutate(
     STAV_IND = ifelse(
       is.infinite(STAV_IND),
@@ -461,8 +493,8 @@ n2k_druhy_chu <-
     ) %>%
   dplyr::mutate(
     STAV_IND = dplyr::case_when(
-      ID_IND == "CELKOVE_HODNOCENI" ~ as.character(CELKOVE),
-      TRUE ~ as.character(STAV_IND)
+      ID_IND == "CELKOVE_HODNOCENI" ~ CELKOVE,
+      TRUE ~ STAV_IND
       )
     ) %>%
   dplyr::mutate(
@@ -513,15 +545,22 @@ n2k_druhy_chu <-
         SITECODE,
         NAZEV
         ),
-      by = c("kod_chu" = "SITECODE")) %>%
+      by = c(
+        "kod_chu" = "SITECODE"
+        )
+    ) %>%
   dplyr::left_join(.,
                    rp_code,
-                   by = join_by("kod_chu")) %>%
-  # dplyr::right_join() zajistuje export hodnoceni pouze pro predmety ochrany
-  dplyr::right_join(
+                   by = join_by(
+                     "kod_chu"
+                     )
+                   ) %>%
+  dplyr::left_join(
     ., 
     n2k_oop,
-    by = c("kod_chu" = "SITECODE")
+    by = c(
+      "kod_chu" = "SITECODE"
+      )
     ) %>%
   dplyr::mutate(
     typ_predmetu_hodnoceni = "Druh",
@@ -544,11 +583,23 @@ n2k_druhy_chu <-
     stav = STAV_IND
     ) %>%
   dplyr::select(
-    typ_predmetu_hodnoceni, kod_chu, nazev_chu, 
-    druh, feature_code, 
-    hodnocene_obdobi_od, hodnocene_obdobi_do, oop, parametr_nazev, 
-    parametr_hodnota, parametr_limit, parametr_jednotka, 
-    stav, trend, datum_hodnoceni, pracoviste, ID_ND_AKCE
+    typ_predmetu_hodnoceni, 
+    kod_chu, 
+    nazev_chu, 
+    druh, 
+    feature_code, 
+    hodnocene_obdobi_od, 
+    hodnocene_obdobi_do, 
+    oop, 
+    parametr_nazev, 
+    parametr_hodnota, 
+    parametr_limit, 
+    parametr_jednotka, 
+    stav, 
+    trend, 
+    datum_hodnoceni, 
+    pracoviste, 
+    ID_ND_AKCE
   ) %>%
   dplyr::left_join(
     ., 
@@ -563,6 +614,19 @@ n2k_druhy_chu <-
       pracoviste
       ),
     metodika = 15087
+  ) %>%
+  # navazani pouze na predmety ochrany, dropnuti nepredmetu
+  dplyr::right_join(
+    .,
+    sites_subjects %>%
+      dplyr::select(
+        site_code,
+        nazev_lat
+      ),
+    by = c(
+      "kod_chu" = "site_code",
+      "druh" = "nazev_lat"
+    )
   ) %>%
   dplyr::select(
     -c(
@@ -581,17 +645,20 @@ n2k_druhy_chu <-
 chu_export <-
   function() {
     
+    # oddelovace a enkodovani pro import do ISOP
     sep_isop <- ";"
     quote_env_isop <- FALSE
     encoding_isop <- "UTF-8"
     
+    # oddelovace a enkodovani pro import do MS Excel
     sep <- ","
     quote_env <- TRUE
     encoding <- "Windows-1250"
     
     write.table(
       n2k_druhy_chu,
-      paste0("C:/Users/jonas.gaigr/Documents/state_results/n2k_druhy_chu",
+      paste0("Outputs/Data/",
+             "n2k_druhy_chu",
              "_",
              current_year,
              "_",
@@ -612,7 +679,8 @@ chu_export <-
     
     write.table(
       n2k_druhy_chu,
-      paste0("C:/Users/jonas.gaigr/Documents/state_results/n2k_druhy_chu",
+      paste0("Outputs/Data/",
+             "n2k_druhy_chu",
              "_",
              current_year,
              "_",
@@ -632,8 +700,6 @@ chu_export <-
     )  
     
   }
-  
-chu_export()
 
 #----------------------------------------------------------#
 # KONEC ----

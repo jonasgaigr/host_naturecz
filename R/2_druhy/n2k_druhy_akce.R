@@ -1,9 +1,11 @@
 #----------------------------------------------------------#
-# Nalez - priprava indikatoru na urovni ----- 
+# Nalez - priprava indikatoru na urovni nalezu ----- 
 #----------------------------------------------------------#
 n2k_druhy_pre <- n2k_export %>%
   #dplyr::filter(DRUH == "Epidalea calamita") %>%
-  dplyr::rename(POLE = POLE_1_RAD) %>% 
+  dplyr::rename(
+    POLE = POLE_1_RAD
+    ) %>% 
   dplyr::mutate(
     # Převedení DRUHu na kategorickou veličinu
     DRUH = as.factor(DRUH),
@@ -14,80 +16,134 @@ n2k_druhy_pre <- n2k_export %>%
     # Redukce data na měsíc
     MESIC = as.numeric(substring(DATUM_OD, 4, 5)),
     # Redukce data na rok
-    ROK = as.numeric(substring(DATUM_OD, 7, 11)),
+    ROK = as.numeric(
+      substring(
+        DATUM_OD, 
+        7, 
+        11
+        )
+      ),
     # Izolace kódu EVL
-    kod_chu = substr(EVL, 1, 9),
+    kod_chu = substr(
+      EVL, 
+      1, 
+      9
+      ),
     # Izolace názvu lokality
-    nazev_chu = substr(as.character(EVL), 12, nchar(as.character(EVL))),
-    KOD_LOKRYB = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<naz_tok>).*(?=</naz_tok>)")),
-    KOD_LOKAL = case_when(SKUPINA == "Letouni" ~ LOKALITA,
-                          SKUPINA == "Mechy" ~ LOKALITA,
-                          SKUPINA == "Motýli" ~ substring(KOD_LOKALITY, 1, 10),
-                          SKUPINA == "Ryby a mihule" & is.na(KOD_LOKRYB) == FALSE ~ KOD_LOKRYB,
-                          KOD_LOKALITY == "amp216" ~ "CZ0723412",
-                          KOD_LOKALITY == "amp222" ~ "CZ0724089_9",
-                          KOD_LOKALITY == "amp231" ~ "CZ0724089_19",
-                          KOD_LOKALITY == "amp185" ~ "CZ0623345",
-                          KOD_LOKALITY == "amp101" ~ "CZ0423006",
-                          KOD_LOKALITY == "amp71" ~ "CZ0323158",
-                          KOD_LOKALITY == "amp59" ~ "CZ0323144",
-                          KOD_LOKALITY == "amp15" ~ "CZ0213790",
-                          KOD_LOKALITY == "amp102" ~ "CZ0423215",
-                          KOD_LOKALITY == "amp254" ~ "CZ0813455",
-                          KOD_LOKALITY == "amp227" ~ "CZ0723410",
-                          KOD_LOKALITY == "amp336 (CZ_5)" ~ "CZ0714073_5",
-                          KOD_LOKALITY == "amp205 (CZ_3)" ~ "CZ0714073_3",
-                          KOD_LOKALITY == "amp337" ~ "CZ0713383",
-                          KOD_LOKALITY == "amp129" ~ "CZ0523011",
-                          KOD_LOKALITY == "amp334 (CZ_3)" ~ "CZ0523010_3",
-                          KOD_LOKALITY == "amp138 (CZ_2)" ~ "CZ0523010_2",
-                          KOD_LOKALITY == "amp335 (cz_1)" ~ "CZ0523010_1",
-                          KOD_LOKALITY == "amp102" ~ "CZ0423215",
-                          KOD_LOKALITY == "amp116" ~ "CZ0513249",
-                          KOD_LOKALITY == "amp101" ~ "CZ0423006",
-                          KOD_LOKALITY == "amp15" ~ "CZ0213790",
-                          KOD_LOKALITY == "amp30" ~ "CZ0213077",
-                          KOD_LOKALITY == "amp314 (cz_2)" ~ "CZ0213064_2",
-                          KOD_LOKALITY == "amp316 (cz_3)" ~ "CZ0213064_3",
-                          KOD_LOKALITY == "amp315 (cz_1)" ~ "CZ0213064_1",
-                          KOD_LOKALITY == "CZ0213008" ~ "CZ0213008_1",
-                          KOD_LOKALITY == "amp244" ~ "CZ0813457",
-                          KOD_LOKALITY == "amp207" ~ "CZ0713385",
-                          KOD_LOKALITY == "amp64" ~ "CZ0323143",
-                          KOD_LOKALITY == "amp24" ~ "CZ0213787",
-                          KOD_LOKALITY == "amp279" ~ "CZ0613335_03",
-                          KOD_LOKALITY == "amp110" ~ "CZ0513244",
-                          KOD_LOKALITY == "amp339" ~ "CZ0213066_2",
-                          KOD_LOKALITY == "amp340" ~ "CZ0213066_1",
-                          KOD_LOKALITY == "amp27" ~ "CZ0213058",
-                          KOD_LOKALITY == "amp226" ~ "CZ0724429_3",
-                          KOD_LOKALITY %in% c("amp211", "amp211" , "amp211", "amp107", "amp99",
-                                              "amp53", "amp252", "amp281", "amp280", "amp22",
-                                              "amp81", "amp25", "CZ0813450", "CZ0713397") ~ NA_character_,
-                          kod_chu == "CZ0623367" ~ "CZ0623367",
-                          is.na(KOD_LOKALITY) == TRUE ~ kod_chu,
-                          TRUE ~ NA_character_)) %>%
-  dplyr::mutate(KOD_LOKAL = dplyr::case_when(is.na(KOD_LOKAL) == TRUE ~ KOD_LOKALITY,
-                                             TRUE ~ KOD_LOKAL)) %>%
-  dplyr::select(-KOD_LOKRYB) %>%
-  dplyr::filter(ROK >= current_year - 12) %>%
-  dplyr::mutate(KOD_LOKAL = dplyr::case_when(is.na(KOD_LOKAL) == TRUE ~ LOKALITA,
-                                             TRUE ~ KOD_LOKAL)) %>%
-  # identifikace dat cileneho monitoringu
-  dplyr::mutate(CILMON = dplyr::case_when(ZDROJ %in% CIS_CILMON ~ 1,
-                                              PROJEKT == "Monitoring druhů ČR" ~ 1,
-                                              DRUH %in% c("Carabus menetriesi pacholei", 
-                                                          "Bolbelasmus unicornis") ~ 1,
-                                              TRUE ~ 0)) %>%
+    nazev_chu = substr(
+      as.character(
+        EVL
+        ),
+      12,
+      nchar(
+        as.character(
+          EVL
+          )
+        )
+      ),
+    KOD_LOKRYB = readr::parse_character(
+      stringr::str_extract(
+        STRUKT_POZN,
+        "(?<=<naz_tok>).*(?=</naz_tok>)"
+        )
+      ),
+    KOD_LOKAL = dplyr::case_when(
+      SKUPINA == "Letouni" ~ LOKALITA,
+      SKUPINA == "Mechy" ~ LOKALITA,
+      SKUPINA == "Motýli" ~ substring(
+        KOD_LOKALITY, 
+        1, 
+        10
+        ),
+      SKUPINA == "Ryby a mihule" &
+        is.na(KOD_LOKRYB) == FALSE 
+      ~ KOD_LOKRYB,
+      KOD_LOKALITY == "amp216" ~ "CZ0723412",
+      KOD_LOKALITY == "amp222" ~ "CZ0724089_9",
+      KOD_LOKALITY == "amp231" ~ "CZ0724089_19",
+      KOD_LOKALITY == "amp185" ~ "CZ0623345",
+      KOD_LOKALITY == "amp101" ~ "CZ0423006",
+      KOD_LOKALITY == "amp71" ~ "CZ0323158",
+      KOD_LOKALITY == "amp59" ~ "CZ0323144",
+      KOD_LOKALITY == "amp15" ~ "CZ0213790",
+      KOD_LOKALITY == "amp102" ~ "CZ0423215",
+      KOD_LOKALITY == "amp254" ~ "CZ0813455",
+      KOD_LOKALITY == "amp227" ~ "CZ0723410",
+      KOD_LOKALITY == "amp336 (CZ_5)" ~ "CZ0714073_5",
+      KOD_LOKALITY == "amp205 (CZ_3)" ~ "CZ0714073_3",
+      KOD_LOKALITY == "amp337" ~ "CZ0713383",
+      KOD_LOKALITY == "amp129" ~ "CZ0523011",
+      KOD_LOKALITY == "amp334 (CZ_3)" ~ "CZ0523010_3",
+      KOD_LOKALITY == "amp138 (CZ_2)" ~ "CZ0523010_2",
+      KOD_LOKALITY == "amp335 (cz_1)" ~ "CZ0523010_1",
+      KOD_LOKALITY == "amp102" ~ "CZ0423215",
+      KOD_LOKALITY == "amp116" ~ "CZ0513249",
+      KOD_LOKALITY == "amp101" ~ "CZ0423006",
+      KOD_LOKALITY == "amp15" ~ "CZ0213790",
+      KOD_LOKALITY == "amp30" ~ "CZ0213077",
+      KOD_LOKALITY == "amp314 (cz_2)" ~ "CZ0213064_2",
+      KOD_LOKALITY == "amp316 (cz_3)" ~ "CZ0213064_3",
+      KOD_LOKALITY == "amp315 (cz_1)" ~ "CZ0213064_1",
+      KOD_LOKALITY == "CZ0213008" ~ "CZ0213008_1",
+      KOD_LOKALITY == "amp244" ~ "CZ0813457",
+      KOD_LOKALITY == "amp207" ~ "CZ0713385",
+      KOD_LOKALITY == "amp64" ~ "CZ0323143",
+      KOD_LOKALITY == "amp24" ~ "CZ0213787",
+      KOD_LOKALITY == "amp279" ~ "CZ0613335_03",
+      KOD_LOKALITY == "amp110" ~ "CZ0513244",
+      KOD_LOKALITY == "amp339" ~ "CZ0213066_2",
+      KOD_LOKALITY == "amp340" ~ "CZ0213066_1",
+      KOD_LOKALITY == "amp27" ~ "CZ0213058",
+      KOD_LOKALITY == "amp226" ~ "CZ0724429_3",
+      KOD_LOKALITY %in% c("amp211", "amp211" , "amp211", "amp107", "amp99",
+                          "amp53", "amp252", "amp281", "amp280", "amp22",
+                          "amp81", "amp25", "CZ0813450", "CZ0713397") ~ NA_character_,
+      kod_chu == "CZ0623367" ~ "CZ0623367",
+      is.na(KOD_LOKALITY) == TRUE ~ kod_chu,
+      TRUE ~ NA_character_)
+    ) %>%
+  dplyr::mutate(
+    KOD_LOKAL = dplyr::case_when(
+      is.na(KOD_LOKAL) == TRUE ~ KOD_LOKALITY,
+      TRUE ~ KOD_LOKAL
+      )
+    ) %>%
+  dplyr::select(
+    -KOD_LOKRYB
+    ) %>%
   dplyr::filter(
-    DRUH %in% sites_subjects$nazev_lat & kod_chu %in% sites_subjects$site_code
+    ROK >= current_year - 12
+    ) %>%
+  dplyr::mutate(
+    KOD_LOKAL = dplyr::case_when(
+      is.na(KOD_LOKAL) == TRUE ~ LOKALITA,
+      TRUE ~ KOD_LOKAL
+      )
+    ) %>%
+  # identifikace dat cileneho monitoringu
+  dplyr::mutate(
+    CILMON = dplyr::case_when(
+      ZDROJ %in% CIS_CILMON ~ 1,
+      PROJEKT == "Monitoring druhů ČR" ~ 1,
+      DRUH %in% c(
+        "Carabus menetriesi pacholei", 
+        "Bolbelasmus unicornis"
+        ) 
+      ~ 1,
+      TRUE ~ 0)
+    ) %>%
+  dplyr::filter(
+    DRUH %in% sites_subjects$nazev_lat & 
+      kod_chu %in% sites_subjects$site_code
   ) %>%
-  #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
+  dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
   #dplyr::filter(SKUPINA %in% c("Motýli", "Brouci", "Vážky")) %>%
   #dplyr::filter(SKUPINA == "Obojživelníci") %>%
-  dplyr::filter(SKUPINA == "Ryby a mihule") %>%
+  #dplyr::filter(SKUPINA == "Ryby a mihule") %>%
   #filter(SKUPINA %in% c("Letouni", "Savci")) %>%
-  # NALEZ_SPOLECNE ---- 
+#--------------------------------------------------#
+## Spolecne indikatory ----- 
+#--------------------------------------------------#
   dplyr::mutate(
     POP_PRESENCE_N = dplyr::case_when(NEGATIVNI == 1 ~ 0,
                                       POCET == 0 ~ 0,
@@ -145,18 +201,32 @@ n2k_druhy_pre <- n2k_export %>%
       ),
     # cilova jednotka, k nacteni z ciselniku, k doplneni Martinem
     POP_CILJEDNOTKA = NA,
-    POP_KOEFICIENT = dplyr::case_when(POP_CILJEDNOTKA == POCITANO ~ 1,
-                                      POP_CILJEDNOTKA == "cm2" & POCITANO == "dm2" ~ 100,
-                                      POP_CILJEDNOTKA == "cm2" & POCITANO == "m2" ~ 10000,
-                                      POP_CILJEDNOTKA == "dm2" & POCITANO == "cm2" ~ 0.01,
-                                      POP_CILJEDNOTKA == "dm2" & POCITANO == "m2" ~ 100,
-                                      POP_CILJEDNOTKA == "m2" & POCITANO == "cm2" ~ 0.0001,
-                                      POP_CILJEDNOTKA == "m2" & POCITANO == "dm2" ~ 0.01),
-    vliv = stringr::str_extract(STRUKT_POZN, "(?<=<vliv>).*(?=</vliv>)")) %>%
+    POP_KOEFICIENT = dplyr::case_when(
+      POP_CILJEDNOTKA == POCITANO ~ 1,
+      POP_CILJEDNOTKA == "cm2" & POCITANO == "dm2" ~ 100,
+      POP_CILJEDNOTKA == "cm2" & POCITANO == "m2" ~ 10000,
+      POP_CILJEDNOTKA == "dm2" & POCITANO == "cm2" ~ 0.01,
+      POP_CILJEDNOTKA == "dm2" & POCITANO == "m2" ~ 100,
+      POP_CILJEDNOTKA == "m2" & POCITANO == "cm2" ~ 0.0001,
+      POP_CILJEDNOTKA == "m2" & POCITANO == "dm2" ~ 0.01),
+    vliv = stringr::str_extract(
+      STRUKT_POZN,
+      "(?<=<vliv>).*(?=</vliv>)"
+      )
+    ) %>%
   dplyr::mutate(
-    VLV_VLIVY = dplyr::case_when(is.na(vliv) == FALSE ~ vliv,
-                                 TRUE ~ stringr::str_extract(STRUKT_POZN, "(?<=<VLV_VLIVY>).*(?=</VLV_VLIVY>)")),
-    VLV_VLIVY_NUM = stringr::str_count(STRUKT_POZN, ",")) %>%
+    VLV_VLIVY = dplyr::case_when(
+      is.na(vliv) == FALSE ~ vliv,
+      TRUE ~ stringr::str_extract(
+        STRUKT_POZN, 
+        "(?<=<VLV_VLIVY>).*(?=</VLV_VLIVY>)"
+        )
+      ),
+    VLV_VLIVY_NUM = stringr::str_count(
+      STRUKT_POZN,
+      ","
+      )
+    ) %>%
   dplyr::mutate(
       # NALEZ_HMYZ ----
       STA_SECCAS = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<sec_nacasovani>).*(?=</sec_nacasovani>)")),
@@ -524,9 +594,10 @@ n2k_druhy_pre <- n2k_export %>%
     ) %>%
   dplyr::distinct() 
 
-## LOK_SPOLECNE ----
+#----------------------------------------------------------#
+# Lokalita - priprava indikatoru na urovni lokality ----- 
+#----------------------------------------------------------#
 n2k_druhy_lokpop <- n2k_druhy_pre %>%
-  #dplyr::filter(SKUPINA %in% c("Cévnaté rostliny", "Obojživelníci")) %>%
   dplyr::select(-c(ZDROJ:PRESNOST), SKUPINA) %>%
   dplyr::group_by(
     KOD_LOKAL, 
@@ -535,9 +606,18 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
     ) %>%
   dplyr::reframe(
     CELKOVE = NA,
-    POP_POCETSUMLOKAL = sum(POP_POCET, na.rm = TRUE),
-    POP_POCETMIN = min(POP_POCET, na.rm = TRUE), 
-    POP_POCETMAX = max(POP_POCET, na.rm = TRUE), 
+    POP_POCETSUMLOKAL = sum(
+      POP_POCET, 
+      na.rm = TRUE
+      ),
+    POP_POCETMIN = min(
+      POP_POCET, 
+      na.rm = TRUE
+      ), 
+    POP_POCETMAX = max(
+      POP_POCET, 
+      na.rm = TRUE
+      ), 
     POP_POCETMAX = ifelse(is.infinite(POP_POCETMAX), 0, POP_POCETMAX),
     POP_POCETNOST = max(
       POP_POCETNOSTNAL,
@@ -555,32 +635,79 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
       na.rm = TRUE
       ),
     # LOK_SAVCI ----
-    POP_POCETZIM = max(POP_POCET[(ROK == current_year & MESIC < 5) |
-                                   (ROK == current_year - 1 & MESIC > 9)], 
-                       na.rm = TRUE), 
-    POP_POCETZIM1 = max(POP_POCET[(ROK == current_year - 1 & MESIC < 5) |
-                                    (ROK == current_year - 2 & MESIC > 9)], 
-                        na.rm = TRUE),
-    POP_POCETZIM2 = max(POP_POCET[(ROK == current_year - 2 & MESIC < 5) |
-                                    (ROK == current_year - 3 & MESIC > 9)], 
-                        na.rm = TRUE),
-    POP_POCETZIM3 = max(POP_POCET[(ROK == current_year - 3 & MESIC < 5) |
-                                    (ROK == current_year - 4 & MESIC > 9)], 
-                        na.rm = TRUE),
-    POP_POCETZIMREF = mean(POP_POCETZIM1, POP_POCETZIM2, POP_POCETZIM3, na.rm = TRUE),
+    POP_POCETZIM = max(
+      POP_POCET[(ROK == current_year & 
+                   MESIC < 5) |
+                  (ROK == current_year - 1 & 
+                     MESIC > 9)
+                ],
+      na.rm = TRUE
+      ), 
+    POP_POCETZIM1 = max(
+      POP_POCET[(ROK == current_year - 1 & 
+                   MESIC < 5) |
+                  (ROK == current_year - 2 &
+                     MESIC > 9)
+                ],
+      na.rm = TRUE
+      ),
+    POP_POCETZIM2 = max(
+      POP_POCET[(ROK == current_year - 2 &
+                   MESIC < 5) |
+                  (ROK == current_year - 3 &
+                     MESIC > 9)
+                ],
+      na.rm = TRUE
+      ),
+    POP_POCETZIM3 = max(
+      POP_POCET[(ROK == current_year - 3 & 
+                   MESIC < 5) |
+                  (ROK == current_year - 4 &
+                     MESIC > 9)], 
+      na.rm = TRUE
+      ),
+    POP_POCETZIMREF = mean(
+      POP_POCETZIM1, 
+      POP_POCETZIM2, 
+      POP_POCETZIM3, 
+      na.rm = TRUE
+      ),
     POP_VITALZIM = POP_POCETZIM/POP_POCETZIMREF,
-    POP_POCETLETS1 = max(POP_POCET[(ROK == current_year & ((MESIC == 5 & DEN >= 15) | (MESIC == 6 & DEN <= 15)))], 
-                         na.rm = TRUE),
-    POP_POCETLETS2 = max(POP_POCET[(ROK == current_year & ((MESIC == 6 & DEN > 15) | (MESIC %in% c(7, 8, 9))))], 
-                         na.rm = TRUE),
-    POP_POCETLET = max(POP_POCET[(ROK == current_year & 
-                                MESIC >= 5 & 
-                                MESIC <= 9)], 
-                       na.rm = TRUE), 
-    POP_POCETLET1 = max(POP_POCET[(ROK == current_year - 1 & 
-                                 MESIC >= 5 & 
-                                 MESIC <= 9)], 
-                        na.rm = TRUE), 
+    POP_POCETLETS1 = max(
+      POP_POCET[(ROK == current_year & 
+                   ((MESIC == 5 & 
+                       DEN >= 15) |
+                      (MESIC == 6 & 
+                         DEN <= 15)
+                    )
+                 )
+                ],
+      na.rm = TRUE),
+    POP_POCETLETS2 = max(
+      POP_POCET[(ROK == current_year &
+                   (
+                     (MESIC == 6 & 
+                       DEN > 15
+                      ) | 
+                       (
+                         MESIC %in% c(7, 8, 9)
+                        )
+                     )
+                 )
+                ], 
+      na.rm = TRUE),
+    POP_POCETLET = max(
+      POP_POCET[(ROK == current_year & 
+                   MESIC >= 5 & 
+                   MESIC <= 9)], 
+      na.rm = TRUE
+      ), 
+    POP_POCETLET1 = max(
+      POP_POCET[(ROK == current_year - 1 & 
+                   MESIC >= 5 & 
+                   MESIC <= 9)], 
+      na.rm = TRUE
+      ), 
     POP_POCETLET2 = max(POP_POCET[(ROK == current_year - 2 & 
                                  MESIC >= 5 & 
                                  MESIC <= 9)], 
@@ -589,7 +716,12 @@ n2k_druhy_lokpop <- n2k_druhy_pre %>%
                                  MESIC >= 5 & 
                                  MESIC <= 9)], 
                         na.rm = TRUE), 
-    POP_POCETLETREF = mean(POP_POCETLET1, POP_POCETLET2, POP_POCETLET3, na.rm = TRUE),
+    POP_POCETLETREF = mean(
+      POP_POCETLET1, 
+      POP_POCETLET2, 
+      POP_POCETLET3, 
+      na.rm = TRUE
+      ),
     POP_VITALLET = POP_POCETLET/POP_POCETLETREF,
     POP_REPROCHI = POP_POCETLETS2/POP_POCETLETS1,
   ) %>%
@@ -759,9 +891,10 @@ n2k_druhy_lim_pre <- n2k_druhy_long %>%
 n2k_druhy_lim <- n2k_druhy_lim_pre %>%
   dplyr::group_by(ID_ND_NALEZ) %>%
   dplyr::mutate(
-    CELKOVE_HODNOCENI = as.character(sum(
-      STAV_IND, 
-      na.rm = TRUE)
+    CELKOVE_HODNOCENI = as.character(
+      sum(
+        STAV_IND, 
+        na.rm = TRUE)
       )
     ) %>%
   dplyr::select(-c(ID_IND:IND_GRP)) %>%
@@ -782,6 +915,94 @@ ncol_druhy_lim <-
   ncol(
     n2k_druhy_lim
     )
+
+#----------------------------------------------------------#
+# Zapis dat -----
+#----------------------------------------------------------#
+
+nal_export <-
+  function() {
+    
+    n2k_druhy_lim_write <-
+      n2k_druhy_lim %>%
+      dplyr::left_join(
+        ., 
+        evl %>%
+          sf::st_drop_geometry() %>%
+          dplyr::select(
+            SITECODE, 
+            NAZEV
+          ),
+        by = c(
+          "kod_chu" = "SITECODE"
+        )
+      ) %>%
+      dplyr::left_join(
+        .,
+        rp_code,
+        by = join_by(
+          "kod_chu"
+        )
+      ) %>%
+      dplyr::left_join(
+        .,
+        n2k_oop,
+        by = c("kod_chu" = "SITECODE")
+      )
+    
+    sep_isop <- ";"
+    quote_env_isop <- FALSE
+    encoding_isop <- "UTF-8"
+    
+    sep <- ","
+    quote_env <- TRUE
+    encoding <- "Windows-1250"
+    
+    write.table(
+      n2k_druhy_lim_write,
+      paste0("Outputs/Data/",
+             "n2k_druhy_nal",
+             "_",
+             current_year,
+             "_",
+             gsub(
+               "-", 
+               "", 
+               Sys.Date()
+             ),
+             "_",
+             encoding,
+             ".csv"
+      ),
+      row.names = FALSE,
+      sep = sep,
+      quote = quote_env,
+      fileEncoding = encoding
+    )  
+    
+    write.table(
+      n2k_druhy_lim_write,
+      paste0("Outputs/Data/",
+             "n2k_druhy_nal",
+             "_",
+             current_year,
+             "_",
+             gsub(
+               "-", 
+               "", 
+               Sys.Date()
+             ),
+             "_",
+             encoding_isop,
+             ".csv"
+      ),
+      row.names = FALSE,
+      sep = sep_isop,
+      quote = quote_env_isop,
+      fileEncoding = encoding_isop
+    )  
+    
+  }
 
 #----------------------------------------------------------#
 # KONEC ----

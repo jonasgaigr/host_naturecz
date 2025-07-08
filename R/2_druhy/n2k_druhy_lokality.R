@@ -1,4 +1,6 @@
-# LOKALITA LIMITY - PRIPRAVA ----
+#----------------------------------------------------------#
+# Priprava agregovanych indikatoru ----
+#----------------------------------------------------------#
 n2k_druhy_lok_pre <- 
   n2k_druhy_lim %>%
   dplyr::group_by(
@@ -10,9 +12,19 @@ n2k_druhy_lok_pre <-
     ID_IND
     ) %>%
   dplyr::reframe(
-    SKUPINA = unique(SKUPINA),
-    NAZEV_LOK = toString(unique(LOKALITA)),
-    ID_ND_AKCE = toString(unique(IDX_ND_AKCE)),
+    SKUPINA = unique(
+      SKUPINA
+      ),
+    NAZEV_LOK = toString(
+      unique(
+        LOKALITA
+        )
+      ),
+    ID_ND_AKCE = toString(
+      unique(
+        IDX_ND_AKCE
+        )
+      ),
     DATUM = max(
       DATUM, 
       na.rm = TRUE
@@ -48,11 +60,20 @@ n2k_druhy_lok_pre <-
       na.rm = TRUE
       )
   ) %>%
-  dplyr::mutate_all(~ ifelse(is.infinite(.), NA, .)) %>% 
+  dplyr::mutate_all(
+    ~ ifelse(
+      is.infinite(
+        .
+        ),
+      NA,
+      .)
+    ) %>% 
   dplyr::ungroup() %>%
   dplyr::distinct()
 
-# LOKALITA LIMITY ----
+#----------------------------------------------------------#
+# Napojeni na limity ----
+#----------------------------------------------------------#
 n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   dplyr::group_by(
     kod_chu, 
@@ -62,24 +83,31 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
     ) %>%
   dplyr::mutate(
     IND_SUM = sum(
-      as.numeric(STAV_IND),
+      as.numeric(
+        STAV_IND[limity$UROVEN %in% c("lok") &
+                   is.na(LIM_IND) == FALSE]
+      ),
       na.rm = TRUE
       ) %>%
       as.character(),
     IND_SUMKLIC = sum(
-      as.numeric(STAV_IND[KLIC == "ano" &
+      as.numeric(
+        STAV_IND[KLIC == "ano" &
+                            limity$UROVEN %in% c("lok") &
                             is.na(LIM_IND) == FALSE]),
       na.rm = TRUE
       ) %>%
       as.character(),
     IND_SUMOST = sum(
-      as.numeric(STAV_IND[KLIC == "ne" &
-                            is.na(LIM_IND) == FALSE]), 
+      as.numeric(
+        STAV_IND[KLIC == "ne" &
+                   limity$UROVEN %in% c("lok") &
+                   is.na(LIM_IND) == FALSE]
+        ), 
       na.rm = TRUE
       ) %>%
       as.character(),
-    LENIND_SUM = 
-      unique(
+    IND_LEN = unique(
         limity$ID_IND[limity$DRUH %in% DRUH &
                         limity$UROVEN %in% c("lok") &
                         is.na(limity$LIM_IND) == FALSE],
@@ -87,34 +115,34 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
         ) %>% 
         na.omit() %>%
       length(),
-    LENIND_SUMKLIC = unique(
-                    limity$ID_IND[limity$DRUH %in% DRUH & 
-                                    limity$KLIC == "ano" &
-                                    limity$UROVEN %in% c("lok") &
-                                    is.na(limity$LIM_IND) == FALSE],
+    IND_LENKLIC = unique(
+      limity$ID_IND[limity$DRUH %in% DRUH & 
+                      limity$KLIC == "ano" &
+                      limity$UROVEN %in% c("lok") &
+                      is.na(limity$LIM_IND) == FALSE],
                     na.rm = TRUE
-                    ) %>%
-                    na.omit() %>%
-    length(),
-                LENIND_SUMOST = length(
-                  unique(
-                    limity$ID_IND[limity$DRUH %in% DRUH &
-                                    limity$KLIC == "ne" &
-                                    limity$UROVEN %in% c("lok") &
-                                    is.na(limity$LIM_IND) == FALSE],
-                    na.rm = TRUE) %>% 
-                    na.omit()
-                  )
-                ) %>%
+      ) %>%
+      na.omit() %>%
+      length(),
+    IND_LENOST = unique(
+      limity$ID_IND[limity$DRUH %in% DRUH &
+                        limity$KLIC == "ne" &
+                        limity$UROVEN %in% c("lok") &
+                        is.na(limity$LIM_IND) == FALSE],
+        na.rm = TRUE
+        ) %>% 
+        na.omit() %>%
+      length()
+    ) %>%
   # pokud sumklic spatny tak spatny, pokud sum ost tak spatny, pokud sumost tak zhorseny, pokud nic z toho tak dobry, TRUE ~ neznamy pres napojeni na limity
   dplyr::mutate(
     CELKOVE = dplyr::case_when(
       is.na(CILMON) == TRUE ~ NA_real_,
-      unique(IND_SUMKLIC) < LENIND_SUMKLIC ~ 0,
-      unique(IND_SUMOST) < (LENIND_SUMOST - 2) ~ 0,
-      unique(IND_SUMOST) < (LENIND_SUMOST - 1) ~ 0.5,
-      unique(IND_SUMKLIC) >= LENIND_SUMKLIC & 
-        unique(IND_SUMOST) > (LENIND_SUMOST - 1) ~ 1,
+      unique(IND_SUMKLIC) < IND_LENKLIC ~ 0,
+      unique(IND_SUMOST) < (IND_LENOST - 2) ~ 0,
+      unique(IND_SUMOST) < (IND_LENOST - 1) ~ 0.5,
+      unique(IND_SUMKLIC) >= IND_LENKLIC & 
+        unique(IND_SUMOST) > (IND_LENOST - 1) ~ 1,
       TRUE ~ NA_real_
       )
     ) %>%
@@ -143,7 +171,9 @@ n2k_druhy_lok <- n2k_druhy_lok_pre %>%
   dplyr::distinct() %>%
   dplyr::arrange(ID_ND_AKCE)
 
-# VYBER ID AKCE REPREZENTUJICI SITMAP_1RAD ----
+#----------------------------------------------------------#
+# Vyber ID_AKCE reprezentujici SITMAP_1RAD ----
+#----------------------------------------------------------#
 n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   dplyr::group_by(
     kod_chu, 
@@ -160,7 +190,9 @@ n2k_druhy_pole1_idakce <- n2k_druhy_lok %>%
   dplyr::ungroup() %>%
   dplyr::pull(ID_ND_AKCE)
 
-# FILTR NALEZU PODLE VYBRANEHO ID AKCE (POLE) ----
+#----------------------------------------------------------#
+# Filtr podle POLE ----
+#----------------------------------------------------------#
 n2k_druhy_pole1eval <- 
   n2k_druhy_lok %>%
   dplyr::filter(
@@ -168,7 +200,9 @@ n2k_druhy_pole1eval <-
     ) %>%
   dplyr::ungroup()
 
-# VYBER ID AKCE REPREZENTUJICI LOKALITU ----
+#----------------------------------------------------------#
+# Vyber posledniho ID_AKCE za lokalitu ----
+#----------------------------------------------------------#
 n2k_druhy_lok_idakce <- 
   n2k_druhy_lok %>%
   dplyr::group_by(
@@ -177,65 +211,131 @@ n2k_druhy_lok_idakce <-
     KOD_LOKAL
     ) %>%
   dplyr::arrange(
-    desc(CILMON),
-    desc(ROK), 
-    desc(CELKOVE), 
-    desc(DATUM)
+    dplyr::desc(
+      CILMON
+      ),
+    dplyr::desc(
+      ROK
+      ), 
+    dplyr::desc(
+      CELKOVE
+      ), 
+    dplyr::desc(
+      DATUM
+      )
     ) %>%
   dplyr::slice(1) %>%
   dplyr::ungroup() %>%
   dplyr::pull(ID_ND_AKCE)
 
-# FILTR NALEZU PODLE VYBRANEHO ID AKCE (LOKALITA) ----
+#----------------------------------------------------------#
+# Filtr lokalit podle vybraneho ID_AKCE -----
+#----------------------------------------------------------#
 n2k_druhy_lokeval <- n2k_druhy_lok %>%
   dplyr::filter(
     ID_ND_AKCE %in% n2k_druhy_pole1_idakce
     ) %>%
   dplyr::ungroup()
 
-write_lok <- write.csv(
-  n2k_druhy_lokeval %>%
-    dplyr::left_join(
-      ., 
-      evl %>%
-        sf::st_drop_geometry() %>%
-        dplyr::select(
-          SITECODE, 
-          NAZEV
-          ),
-      by = c(
-        "kod_chu" = "SITECODE"
-        )
-      ) %>%
-    dplyr::left_join(
-      ., 
-      n2k_druhy_obdobi_chu,
-      by = join_by(
-        "kod_chu", 
-        "DRUH"
-        )
-      ) %>%
-    dplyr::left_join(
-      .,
-      rp_code,
-      by = join_by(
-        "kod_chu"
-        )
-      ) %>%
-    dplyr::left_join(
-      .,
-      n2k_oop,
-      by = c("kod_chu" = "SITECODE")
-      ),
-  paste0(
-    "C:/Users/jonas.gaigr/Documents/state_results/n2k_druhy_lok_",
-    toString(Sys.Date()),
-    ".csv"
-    ),
-  row.names = TRUE,
-  fileEncoding = "Windows-1250")
+#----------------------------------------------------------#
+# Zapis dat -----
+#----------------------------------------------------------#
 
-write_lok
+lok_export <-
+  function() {
+    
+    n2k_druhy_lok_write <-
+      n2k_druhy_lokeval %>%
+      dplyr::left_join(
+        ., 
+        evl %>%
+          sf::st_drop_geometry() %>%
+          dplyr::select(
+            SITECODE, 
+            NAZEV
+          ),
+        by = c(
+          "kod_chu" = "SITECODE"
+        )
+      ) %>%
+      dplyr::left_join(
+        ., 
+        n2k_druhy_obdobi_lok,
+        by = join_by(
+          "kod_chu",
+          "KOD_LOKAL",
+          "POLE",
+          "DRUH",
+        )
+      ) %>%
+      dplyr::left_join(
+        .,
+        rp_code,
+        by = join_by(
+          "kod_chu"
+        )
+      ) %>%
+      dplyr::left_join(
+        .,
+        n2k_oop,
+        by = c("kod_chu" = "SITECODE")
+      )
+    
+    sep_isop <- ";"
+    quote_env_isop <- FALSE
+    encoding_isop <- "UTF-8"
+    
+    sep <- ","
+    quote_env <- TRUE
+    encoding <- "Windows-1250"
+    
+    write.table(
+      n2k_druhy_lok_write,
+      paste0(
+        "Outputs/Data/",
+        "n2k_druhy_lok",
+        "_",
+        current_year,
+        "_",
+        gsub(
+          "-", 
+          "", 
+          Sys.Date()
+          ),
+        "_",
+        encoding,
+        ".csv"
+      ),
+      row.names = FALSE,
+      sep = sep,
+      quote = quote_env,
+      fileEncoding = encoding
+    )  
+    
+    write.table(
+      n2k_druhy_lok_write,
+      paste0(
+        "Outputs/Data/",
+        "n2k_druhy_lok",
+        "_",
+        current_year,
+        "_",
+        gsub(
+          "-", 
+          "", 
+          Sys.Date()
+          ),
+        "_",
+        encoding_isop,
+        ".csv"
+      ),
+      row.names = FALSE,
+      sep = sep_isop,
+      quote = quote_env_isop,
+      fileEncoding = encoding_isop
+    )  
+    
+  }
 
 #----------------------------------------------------------#
 # KONEC ----
