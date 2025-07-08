@@ -136,34 +136,46 @@ n2k_druhy_pre <- n2k_export %>%
     DRUH %in% sites_subjects$nazev_lat & 
       kod_chu %in% sites_subjects$site_code
   ) %>%
-  dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
+  #dplyr::filter(SKUPINA == "Cévnaté rostliny") %>%
   #dplyr::filter(SKUPINA %in% c("Motýli", "Brouci", "Vážky")) %>%
   #dplyr::filter(SKUPINA == "Obojživelníci") %>%
-  #dplyr::filter(SKUPINA == "Ryby a mihule") %>%
+  dplyr::filter(SKUPINA == "Ryby a mihule") %>%
   #filter(SKUPINA %in% c("Letouni", "Savci")) %>%
 #--------------------------------------------------#
 ## Spolecne indikatory ----- 
 #--------------------------------------------------#
   dplyr::mutate(
-    POP_PRESENCE_N = dplyr::case_when(NEGATIVNI == 1 ~ 0,
-                                      POCET == 0 ~ 0,
-                                      NEGATIVNI == 0 ~ 1,
-                                      POCET > 0 ~ 1),
-    POP_PRESENCE = dplyr::case_when(POP_PRESENCE_N == 1 ~ "ano",
-                                    POP_PRESENCE_N == 0 ~ "ne"),
-    POP_POCET = dplyr::case_when(POP_PRESENCE == "ne" ~ 0,
-                                 POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_POCET"] ~ POCET,
-                                 TRUE ~ NA_real_),
-    POP_POCETSUM = dplyr::case_when(POP_PRESENCE == "ne" ~ 0,
-                                    POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_POCETSUM"] ~ POCET,
-                                    TRUE ~ NA_real_),
-    POP_PLOCHA = dplyr::case_when(POP_PRESENCE == "ne" ~ 0,
-                                  POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_PLOCHA"] ~ POCET,
-                                  TRUE ~ NA_real_),
-    POP_REPRO = dplyr::case_when(POP_PRESENCE == "ne" ~ "ne",
-                                 POP_PRESENCE == "ano" & POCITANO %in% limity$JEDNOTKA[limity$ID_IND == "POP_REPRO" & limity$druh == DRUH] ~ "ano",
-                                 POP_PRESENCE == "ano" & POCITANO %in% !limity$JEDNOTKA[limity$ID_IND == "POP_REPRO" & limity$druh == DRUH] ~ "ano",
-                                 TRUE ~ NA_character_),
+    POP_PRESENCE_N = dplyr::case_when(
+      NEGATIVNI == 1 ~ 0,
+      POCET == 0 ~ 0,
+      NEGATIVNI == 0 ~ 1,
+      POCET > 0 ~ 1
+      ),
+    POP_PRESENCE = dplyr::case_when(
+      POP_PRESENCE_N == 1 ~ "ano",
+      POP_PRESENCE_N == 0 ~ "ne"
+      ),
+    POP_POCET = dplyr::case_when(
+      POP_PRESENCE == "ne" ~ 0,
+      POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_POCET"] ~ POCET,
+      TRUE ~ NA_real_
+      ),
+    POP_POCETSUM = dplyr::case_when(
+      POP_PRESENCE == "ne" ~ 0,
+      POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_POCETSUM"] ~ POCET,
+      TRUE ~ NA_real_
+      ),
+    POP_PLOCHA = dplyr::case_when(
+      POP_PRESENCE == "ne" ~ 0,
+      POCITANO %in% limity$JEDNOTKA[limity$DRUH %in% DRUH & limity$ID_IND %in% "POP_PLOCHA"] ~ POCET,
+      TRUE ~ NA_real_
+      ),
+    POP_REPRO = dplyr::case_when(
+      POP_PRESENCE == "ne" ~ "ne",
+      POP_PRESENCE == "ano" & POCITANO %in% limity$JEDNOTKA[limity$ID_IND == "POP_REPRO" & limity$druh == DRUH] ~ "ano",
+      POP_PRESENCE == "ano" & POCITANO %in% !limity$JEDNOTKA[limity$ID_IND == "POP_REPRO" & limity$druh == DRUH] ~ "ano",
+      TRUE ~ NA_character_
+      ),
     POP_POCETNOSTNAL = dplyr::case_when(
       POP_PRESENCE == 0 ~ 0,
       POP_POCET > 1000000 ~ 8,
@@ -382,14 +394,54 @@ n2k_druhy_pre <- n2k_export %>%
                         MESIC <= 9)],
         na.rm = TRUE),
       # NALEZ MECHOROSTY ----
-      POP_POCETMIKROLOK = readr::parse_number(stringr::str_extract(STRUKT_POZN, "(?<=<pocet_ml>).*(?=</pocet_ml>)")),
-      POP_TRENDBRY = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<trend_vyvoj>).*(?=</trend_vyvoj>)")),
-      POP_ZMENABRY1 = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<SP_POSKOZENI_ROSTLIN>).*(?=</SP_POSKOZENI_ROSTLIN>)")),
-      POP_ZMENABRY2 = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<str_strom>).*(?=</str_strom>)")),
-      POP_PLOCHAPOP = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<str_strom>).*(?=</str_strom>)")),
-      STA_DREVOBRY = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<SUB>).*(?=</SUB>)")),
-      STA_STRUKTVEKBRY = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<str_strom>).*(?=</str_strom>)")),
-      STA_STRUKTDRUBRY = readr::parse_character(stringr::str_extract(STRUKT_POZN, "(?<=<druh_strom>).*(?=</druh_strom>)")),
+      POP_POCETMIKROLOK = readr::parse_number(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<pocet_ml>).*(?=</pocet_ml>)"
+          )
+        ),
+      POP_TRENDBRY = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<trend_vyvoj>).*(?=</trend_vyvoj>)"
+          )
+        ),
+      POP_ZMENABRY1 = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<SP_POSKOZENI_ROSTLIN>).*(?=</SP_POSKOZENI_ROSTLIN>)"
+          )
+        ),
+      POP_ZMENABRY2 = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<str_strom>).*(?=</str_strom>)"
+          )
+        ),
+      POP_PLOCHAPOP = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<str_strom>).*(?=</str_strom>)"
+          )
+        ),
+      STA_DREVOBRY = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<SUB>).*(?=</SUB>)"
+          )
+        ),
+      STA_STRUKTVEKBRY = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<str_strom>).*(?=</str_strom>)"
+          )
+        ),
+      STA_STRUKTDRUBRY = readr::parse_character(
+        stringr::str_extract(
+          STRUKT_POZN, 
+          "(?<=<druh_strom>).*(?=</druh_strom>)"
+          )
+        ),
       # NALEZ_CEVNATE ----
       POP_POCETLODYH = dplyr::case_when(
         POP_PRESENCE == "ne" ~ 0,
