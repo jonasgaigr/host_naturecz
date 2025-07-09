@@ -154,6 +154,14 @@ limity <- readr::read_csv(
   dplyr::ungroup()
 
 #--------------------------------------------------#
+## Ciselnik poctu navazanych na relativni kategorii pocetnost ---- 
+#--------------------------------------------------#
+cis_pocet_kat <- readr::read_csv(
+  "https://raw.githubusercontent.com/jonasgaigr/host_naturecz/main/Data/Input/cis_pocet_kat.csv", 
+  locale = readr::locale(encoding = "Windows-1250")
+)
+
+#--------------------------------------------------#
 ## Ciselnik indikatoru hodnoceni stavu ---- 
 #--------------------------------------------------#
 indikatory_id <- readr::read_csv(
